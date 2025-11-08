@@ -1,0 +1,31 @@
+import { Button } from "./ui/button";
+
+const Header: React.FC = () => {
+  return (
+    <div className="flex flex-col md:flex-row items-center justify-between p-4">
+      <h1 className="text-2xl font-bold">EzVector</h1>
+      <div>
+        <nav className="space-x-4">
+            <a href="/services" className="hover:underline">
+            Services
+          </a>
+          <a href="/howto" className="hover:underline">
+            How-to
+          </a>
+          <a href="/faq" className="hover:underline">
+            FAQ
+          </a>
+            <a href="/contact" className="hover:underline">
+            Contact
+          </a>
+        </nav>
+      </div>
+      <div className="space-x-2">
+        <Button>Sign In</Button>
+        <Button>Order Now</Button>
+      </div>
+    </div>
+  );
+};
+
+export default Header;
