@@ -5,12 +5,14 @@ package com.ezvector.backend.model;/*PLEASE DO NOT EDIT THIS CODE*/
 import jakarta.persistence.*;
 
 import java.sql.Date;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
 import java.util.*;
 
 // line 41 "model.ump"
 // line 140 "model.ump"
 @Entity
-@Table(name="orders")
+@Table(name = "orders")
 public class Order {
 
     //------------------------
@@ -27,8 +29,8 @@ public class Order {
     @Id
     @GeneratedValue
     private int orderID;
-    @Temporal(TemporalType.DATE)
-    private Date datePlaced;
+    @Column(name = "date_placed", columnDefinition = "TIMESTAMPTZ")
+    private OffsetDateTime datePlaced;
     @Temporal(TemporalType.DATE)
     private Date dateReceived;
     private int totalOrderPrice;
@@ -44,7 +46,7 @@ public class Order {
     // CONSTRUCTOR
     //------------------------
 
-    public Order(int aOrderID, Date aDatePlaced, Date aDateReceived, int aTotalOrderPrice, OrderStatus aStatus, Customer aCustomerOrdering) {
+    public Order(int aOrderID, OffsetDateTime aDatePlaced, Date aDateReceived, int aTotalOrderPrice, OrderStatus aStatus, Customer aCustomerOrdering) {
         orderID = aOrderID;
         datePlaced = aDatePlaced;
         dateReceived = aDateReceived;
@@ -71,7 +73,7 @@ public class Order {
         return wasSet;
     }
 
-    public boolean setDatePlaced(Date aDatePlaced) {
+    public boolean setDatePlaced(OffsetDateTime aDatePlaced) {
         boolean wasSet = false;
         datePlaced = aDatePlaced;
         wasSet = true;
@@ -103,7 +105,7 @@ public class Order {
         return orderID;
     }
 
-    public Date getDatePlaced() {
+    public OffsetDateTime getDatePlaced() {
         return datePlaced;
     }
 

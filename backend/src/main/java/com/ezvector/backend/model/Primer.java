@@ -7,71 +7,64 @@ import jakarta.persistence.*;
 // line 68 "model.ump"
 // line 155 "model.ump"
 @Entity
-public class Primer
-{
+public class Primer {
 
-  //------------------------
-  // MEMBER VARIABLES
-  //------------------------
+    //------------------------
+    // MEMBER VARIABLES
+    //------------------------
     @Id
     @GeneratedValue
     private int primerId;
 
-  //Primer Associations
+    //Primer Associations
     @ManyToOne
-  private Plasmid plasmid;
+    private Plasmid plasmid;
 
-  //------------------------
-  // CONSTRUCTOR
-  //------------------------
+    //------------------------
+    // CONSTRUCTOR
+    //------------------------
 
-  public Primer(Plasmid aPlasmid)
-  {
-    boolean didAddPlasmid = setPlasmid(aPlasmid);
-    if (!didAddPlasmid)
-    {
-      throw new RuntimeException("Unable to create primer due to plasmid. See https://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
-    }
-  }
-
-  public Primer(){}
-
-  //------------------------
-  // INTERFACE
-  //------------------------
-  /* Code from template association_GetOne */
-  public Plasmid getPlasmid()
-  {
-    return plasmid;
-  }
-  /* Code from template association_SetOneToMany */
-  public boolean setPlasmid(Plasmid aPlasmid)
-  {
-    boolean wasSet = false;
-    if (aPlasmid == null)
-    {
-      return wasSet;
+    public Primer(Plasmid aPlasmid) {
+        boolean didAddPlasmid = setPlasmid(aPlasmid);
+        if (!didAddPlasmid) {
+            throw new RuntimeException("Unable to create primer due to plasmid. See https://manual.umple.org?RE002ViolationofAssociationMultiplicity.html");
+        }
     }
 
-    Plasmid existingPlasmid = plasmid;
-    plasmid = aPlasmid;
-    if (existingPlasmid != null && !existingPlasmid.equals(aPlasmid))
-    {
-      existingPlasmid.removePrimer(this);
+    public Primer() {
     }
-    plasmid.addPrimer(this);
-    wasSet = true;
-    return wasSet;
-  }
 
-  public void delete()
-  {
-    Plasmid placeholderPlasmid = plasmid;
-    this.plasmid = null;
-    if(placeholderPlasmid != null)
-    {
-      placeholderPlasmid.removePrimer(this);
+    //------------------------
+    // INTERFACE
+    //------------------------
+    /* Code from template association_GetOne */
+    public Plasmid getPlasmid() {
+        return plasmid;
     }
-  }
+
+    /* Code from template association_SetOneToMany */
+    public boolean setPlasmid(Plasmid aPlasmid) {
+        boolean wasSet = false;
+        if (aPlasmid == null) {
+            return wasSet;
+        }
+
+        Plasmid existingPlasmid = plasmid;
+        plasmid = aPlasmid;
+        if (existingPlasmid != null && !existingPlasmid.equals(aPlasmid)) {
+            existingPlasmid.removePrimer(this);
+        }
+        plasmid.addPrimer(this);
+        wasSet = true;
+        return wasSet;
+    }
+
+    public void delete() {
+        Plasmid placeholderPlasmid = plasmid;
+        this.plasmid = null;
+        if (placeholderPlasmid != null) {
+            placeholderPlasmid.removePrimer(this);
+        }
+    }
 
 }

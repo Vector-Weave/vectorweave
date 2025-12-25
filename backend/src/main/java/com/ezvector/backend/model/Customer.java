@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.sql.Date;
 
@@ -237,7 +238,7 @@ public class Customer extends Person {
     }
 
     /* Code from template association_AddManyToOne */
-    public Order addCustomerOrder(int aOrderID, Date aDatePlaced, Date aDateReceived, int aTotalOrderPrice, Order.OrderStatus aStatus) {
+    public Order addCustomerOrder(int aOrderID, OffsetDateTime aDatePlaced, Date aDateReceived, int aTotalOrderPrice, Order.OrderStatus aStatus) {
         return new Order(aOrderID, aDatePlaced, aDateReceived, aTotalOrderPrice, aStatus, this);
     }
 
