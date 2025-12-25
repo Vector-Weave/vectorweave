@@ -9,106 +9,96 @@ import jakarta.persistence.Id;
 // line 33 "model.ump"
 // line 125 "model.ump"
 @Entity
-public class Address
-{
+public class Address {
 
-  //------------------------
-  // MEMBER VARIABLES
-  //------------------------
+    //------------------------
+    // MEMBER VARIABLES
+    //------------------------
 
-  //Address Attributes
+    //Address Attributes
     @Id
     @GeneratedValue
     private int addressId;
-  private String street;
-  private String city;
-  private String state;
-  private String zipCode;
+    private String street;
+    private String city;
+    private String state;
+    private String zipCode;
 
-  //------------------------
-  // CONSTRUCTOR
-  //------------------------
+    //------------------------
+    // CONSTRUCTOR
+    //------------------------
 
-  public Address(String aStreet, String aCity, String aState, String aZipCode)
-  {
-    street = aStreet;
-    city = aCity;
-    state = aState;
-    zipCode = aZipCode;
-  }
-  public Address(){}
+    public Address(String aStreet, String aCity, String aState, String aZipCode) {
+        street = aStreet;
+        city = aCity;
+        state = aState;
+        zipCode = aZipCode;
+    }
 
-  //------------------------
-  // INTERFACE
-  //------------------------
+    public Address() {
+    }
 
-  public boolean setStreet(String aStreet)
-  {
-    boolean wasSet = false;
-    street = aStreet;
-    wasSet = true;
-    return wasSet;
-  }
+    //------------------------
+    // INTERFACE
+    //------------------------
 
-  public boolean setCity(String aCity)
-  {
-    boolean wasSet = false;
-    city = aCity;
-    wasSet = true;
-    return wasSet;
-  }
+    public boolean setStreet(String aStreet) {
+        boolean wasSet = false;
+        street = aStreet;
+        wasSet = true;
+        return wasSet;
+    }
 
-  public boolean setState(String aState)
-  {
-    boolean wasSet = false;
-    state = aState;
-    wasSet = true;
-    return wasSet;
-  }
+    public boolean setCity(String aCity) {
+        boolean wasSet = false;
+        city = aCity;
+        wasSet = true;
+        return wasSet;
+    }
 
-  public boolean setZipCode(String aZipCode)
-  {
-    boolean wasSet = false;
-    zipCode = aZipCode;
-    wasSet = true;
-    return wasSet;
-  }
+    public boolean setState(String aState) {
+        boolean wasSet = false;
+        state = aState;
+        wasSet = true;
+        return wasSet;
+    }
 
-  public String getStreet()
-  {
-    return street;
-  }
+    public boolean setZipCode(String aZipCode) {
+        boolean wasSet = false;
+        zipCode = aZipCode;
+        wasSet = true;
+        return wasSet;
+    }
 
-  public String getCity()
-  {
-    return city;
-  }
+    public String getStreet() {
+        return street;
+    }
 
-  public String getState()
-  {
-    return state;
-  }
+    public String getCity() {
+        return city;
+    }
 
-  public String getZipCode()
-  {
-    return zipCode;
-  }
+    public String getState() {
+        return state;
+    }
 
-  public int getAddressId()
-  {
-    return addressId;
-  }
+    public String getZipCode() {
+        return zipCode;
+    }
 
-  public void delete()
-  {}
+    public int getAddressId() {
+        return addressId;
+    }
+
+    public void delete() {
+    }
 
 
-  public String toString()
-  {
-    return super.toString() + "["+
-            "street" + ":" + getStreet()+ "," +
-            "city" + ":" + getCity()+ "," +
-            "state" + ":" + getState()+ "," +
-            "zipCode" + ":" + getZipCode()+ "]";
-  }
+    public String toString() {
+        return super.toString() + "[" +
+                "street" + ":" + getStreet() + "," +
+                "city" + ":" + getCity() + "," +
+                "state" + ":" + getState() + "," +
+                "zipCode" + ":" + getZipCode() + "]";
+    }
 }

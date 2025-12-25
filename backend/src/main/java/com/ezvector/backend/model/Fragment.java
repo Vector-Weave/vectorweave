@@ -22,7 +22,6 @@ public class Fragment
     //------------------------
     // MEMBER VARIABLES
     //------------------------
-
     //Fragment Attributes
     @Id
     @GeneratedValue
