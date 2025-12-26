@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.5.7'
 	id 'io.spring.dependency-management' version '1.1.7'
+    id 'jacoco'
 }
 
 group = 'com.ezvector'
@@ -29,4 +30,13 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+    testLogging {
+        exceptionFormat "full"
+        events "passed", "failed"
+    }
+    finalizedBy jacocoTestReport
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn test // tests are required to run before generating the report
 }

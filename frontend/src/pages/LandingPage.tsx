@@ -1,11 +1,12 @@
 import React from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const LandingPage: React.FC = () => {
   return (
-    <div>
+    <div className="min-h-screen flex flex-col">  {/* className to push footer to bottom of page */}
       <Header />
       <main className="flex-1 container mx-auto px-4 py-12" aria-label="Main">
         <section className="flex flex-col md:flex-row items-center gap-8">
@@ -17,7 +18,9 @@ const LandingPage: React.FC = () => {
               Send your DNA and we’ll do the rest.
             </p>
             <div>
-              <Button>Get Started</Button>
+              <Link to="/order">
+                <Button>Get Started</Button>
+              </Link>
             </div>
           </div>
 

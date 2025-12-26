@@ -1,7 +1,7 @@
 const Footer: React.FC = () => {
   return (
     <footer className="text-center py-4">
-      <p>© 2025 My Application. All rights reserved.</p>
+      <p>© 2025 VectorWeave. All rights reserved.</p>
     </footer>
   );
 };

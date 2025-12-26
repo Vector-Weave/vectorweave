@@ -1,12 +1,16 @@
 import { Button } from "./ui/button";
+import { Link } from "react-router-dom";
 
 const Header: React.FC = () => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between p-4">
-      <h1 className="text-2xl font-bold">EzVector</h1>
+      <Link to="/">
+        <h1 className="text-2xl font-bold">VectorWeave</h1>
+      </Link>
+
       <div>
         <nav className="space-x-4">
-            <a href="/services" className="hover:underline">
+          <a href="/services" className="hover:underline">
             Services
           </a>
           <a href="/howto" className="hover:underline">
@@ -15,7 +19,7 @@ const Header: React.FC = () => {
           <a href="/faq" className="hover:underline">
             FAQ
           </a>
-            <a href="/contact" className="hover:underline">
+          <a href="/contact" className="hover:underline">
             Contact
           </a>
         </nav>
