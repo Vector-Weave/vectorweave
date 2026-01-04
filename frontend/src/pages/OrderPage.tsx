@@ -3,7 +3,7 @@ import Footer from "../components/Footer";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Select,
   SelectContent,
@@ -39,7 +39,7 @@ const buildConfigs = {
 
   1: {
     title: "Mutagenesis build",
-    showBackbone: false,
+    showBackbone: true,
     fragments: 1,
     image: "assets/2.png",
     rows: [
@@ -62,67 +62,125 @@ const buildConfigs = {
 const OrderPage: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<0 | 1 | 2 | null>(null);
   const [showBackboneCard, setShowBackboneCard] = useState(false);
-  const [newBackbone, setNewBackbone] = useState("");
+  const [newBackboneName, setNewBackboneName] = useState("");
+  const [newBackboneSequence, setNewBackboneSequence] = useState("");
+  const [backboneUploadError, setBackboneUploadError] = useState("");
   const [fragments, setFragments] = useState<string[]>([]);
   const [plasmidName, setPlasmidName] = useState("");
   const [plasmidError, setPlasmidError] = useState("");
+  const [fragmentErrors, setFragmentErrors] = useState<string[]>([]);
+  const [submissionError, setSubmissionError] = useState("");
   const [dnaTypes, setDnaTypes] = useState<string[]>([]);
+  const [backbones, setBackbones] = useState<string[]>([]);
+  const [selectedBackbone, setSelectedBackbone] = useState<string | null>(null);
+  const [backboneSelectedError, setBackboneSelectedError] = useState("");
+  //dummy variable for now - will change when connected to backend
+  const [loggedIn, setLoggedIn] = useState(true);
 
   const config = selectedOption !== null ? buildConfigs[selectedOption] : null;
 
   const validatePlasmidName = (name: string) => {
+    let error = "";
     if (name.trim() === "") {
-      return "Plasmid name is required.";
+      error = "Plasmid name is required.";
     }
-    if (name.length > 50) {
-      return "Plasmid name must be 50 characters or less.";
+    else if (name.length > 50) {
+      error = "Plasmid name must be 50 characters or less.";
     }
-    if (!/^[a-zA-Z0-9]+$/.test(name)) {
-      return "Plasmid name can only contain letters and numbers.";
+    else if (!/^[a-zA-Z0-9]+$/.test(name)) {
+      error = "Plasmid name can only contain letters and numbers.";
     }
-    return "";
+    setPlasmidError(error);
+    return (error === "");
   };
 
   const validateFragments = () => {
+    const errors: string[] = Array(fragments.length).fill("");
     const dnaRegex = /^[ACGTacgt]+$/;
 
-    for (let i = 0; i < fragments.length; i++) {
-      const frag = fragments[i].trim();
-      if (frag !== "" && !dnaRegex.test(frag)) {
-        return `Fragment ${i + 1} can only contain valid DNA bases (A, C, G, T).`;
+    fragments.forEach((frag, i) => {
+      const trimmed = frag.trim();
+      if (trimmed === ""){
+        if(selectedOption===0 && dnaTypes[i]?.trim())
+          errors[i] = "Please enter a corresponding fragment sequence.";
+        else
+          return;
       }
-    }
-    if (selectedOption === 0) {
-      for (let i = 0; i < fragments.length; i++) {
-        if (fragments[i].trim() !== "" && (!dnaTypes[i] || dnaTypes[i] === "")) {
-          return `Please select a DNA type for Fragment ${i + 1}.`;
-        }
+      else if (!dnaRegex.test(trimmed)) {
+        errors[i] = "Fragment can only contain A, C, G, or T.";
+        return;
       }
-    }
-    return "";
+      else if (selectedOption === 0 && (!dnaTypes[i] || dnaTypes[i] === "")) {
+        errors[i] = "Please select a DNA type.";
+      }
+    });
+    setFragmentErrors(errors);
+    //return true if any fragment error exists
+    return errors.some((e) => e !== "");
   };
 
+  const validateBackbone = (name: string, sequence: string) => {
+    let error = "";
+    // Validate backbone name
+    if (!name.trim())
+      error = "Backbone name is required.";
+    else if (name.length > 50) 
+      error = "Backbone name must be 50 characters or less.";
+    else if (!/^[a-zA-Z0-9]+$/.test(name)) 
+      error = "Backbone name can only contain letters and numbers.";
+
+    // Validate sequence
+    else if (!sequence.trim()) 
+      error = "Backbone sequence is required.";
+    else if (!/^[ACGTacgt]+$/.test(sequence)) 
+      error = "Backbone sequence can only contain DNA bases (A, C, G, T).";
+
+    setBackboneUploadError(error);
+
+    // Return true if an error exists
+    return error !== ""
+  }
+
+  const backboneSelected = () => {
+    let error = ""
+    if (selectedBackbone==="" || selectedBackbone===null)
+      error = "Select or upload a backbone."
+    setBackboneSelectedError(error);
+  }
+
+  const validateOrder = () => {
+    let error = "";
+    if (selectedOption===0 && !fragments.some(frag => frag.trim() !== "")) {
+      error ="Enter at least one fragment.";
+    }
+    setSubmissionError(error);
+
+    //return true if an error exists
+    return (error !== "");
+  }
+
   const handleSubmit = () => {
-    const plasmidErr = validatePlasmidName(plasmidName);
-    const fragmentErr = validateFragments();
+    const plasmidErr = !validatePlasmidName(plasmidName);
+    const hasFragmentErrors = validateFragments();
+    const hasOrderErrors = validateOrder();
+    const backboneErr = backboneSelected();
 
-    if (plasmidErr) {
-      setPlasmidError(plasmidErr);
-      return false;
-    }
-
-    if (fragmentErr) {
-      alert(fragmentErr);
-      return false;
-    }
-
-    if(!fragments.some(frag => frag.trim() !== "")){
-      alert( `Enter at least one fragment.`)
+    if (plasmidErr || hasFragmentErrors || hasOrderErrors || backboneErr) {
       return false;
     }
 
     return true;
   }
+
+  useEffect(() => {
+    if (loggedIn) {
+      setBackbones(["puc", "pcdna"]);
+    }
+    else {
+      setBackbones([]);
+      setSelectedBackbone(null);
+    }
+  }, [loggedIn]);
 
   return (
     <div className="min-h-screen flex flex-col">  {/* className to push footer to bottom of page */}
@@ -135,7 +193,6 @@ const OrderPage: React.FC = () => {
         <div className="flex flex-col items-center gap-2">
           {/* First blue box with 4 squares */}
           <div className="w-full h-60 bg-sky-200 rounded-[20px] flex flex-col px-8 py-4">
-
             {/* Text at top-left */}
             <p className="text-lg font-medium text-sky-900 mb-2">
               1. Choose your plasmid option:
@@ -159,6 +216,14 @@ const OrderPage: React.FC = () => {
                     } else {
                       setDnaTypes([]);
                     }
+                    //re-set plasmid name, backbone, and fragments
+                    setPlasmidName("");
+                    setSelectedBackbone(null);
+                    setDnaTypes([]);
+                    //re-set errors
+                    setFragmentErrors([]);
+                    setPlasmidError("");
+                    setSubmissionError("");
                   }}
                   className={`
                     w-40 h-40 py-2 px-2 rounded-[30px]
@@ -214,13 +279,12 @@ const OrderPage: React.FC = () => {
                       onChange={(e) => {
                         const value = e.target.value;
                         setPlasmidName(value);
-                        setPlasmidError(validatePlasmidName(value));
+                        validatePlasmidName(value);
                       }}
                       onBlur={() => {
-                        setPlasmidError(validatePlasmidName(plasmidName));
+                        validatePlasmidName(plasmidName);
                       }}
-                      className={`bg-sky-100 border-sky-400 focus-visible:ring-sky-500 focus-visible:border-sky-500 ${plasmidError ? "border-red-500" : ""
-                        }`}
+                      className={`bg-sky-100 border-sky-400 focus-visible:ring-sky-500 focus-visible:border-sky-500 ${plasmidError ? "border-red-500" : ""}`}
                       required
                     />
                     {plasmidError && <p className="text-red-500 text-sm">{plasmidError}</p>}
@@ -230,25 +294,41 @@ const OrderPage: React.FC = () => {
                     {config?.showBackbone && (
                       <div className="grid gap-2">
                         <Label>Vector Backbone</Label>
-                        <Select>
-                          <SelectTrigger className="w-[180px] bg-sky-100 border-sky-400">
+                        {/* Message for when user is logged out */}
+                        {!loggedIn && (
+                          <p className="text-sm text-sky-800">
+                            Log in to view your previously used backbones
+                          </p>
+                        )}
+                        <Select
+                          value={selectedBackbone || ""}
+                          onValueChange={(val) => {
+                            setSelectedBackbone(val);
+                            setBackboneSelectedError("");
+                          }}
+                        >
+                          <SelectTrigger className={`w-[180px] bg-sky-100 border-sky-400 focus-visible:ring-sky-500 focus-visible:border-sky-500 ${backboneSelectedError ? "border-red-500" : ""}`}>
                             <SelectValue placeholder="Select a backbone" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="puc">pUC</SelectItem>
-                            <SelectItem value="pcdna">pcDNA</SelectItem>
+                            {backbones.map((b, i) => (
+                              <SelectItem key={i} value={b}>{b}</SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <a
                           href="#"
                           onClick={(e) => {
                             e.preventDefault();
+                            setBackboneSelectedError("");
                             setShowBackboneCard(true);
                           }}
                           className="inline-block text-sm underline-offset-4 hover:underline"
                         >
                           + Upload a new backbone
                         </a>
+
+                        {backboneSelectedError && <p className="text-red-500 text-sm">{backboneSelectedError}</p>}
 
                         {/* Pop-up card */}
                         {showBackboneCard && (
@@ -259,32 +339,56 @@ const OrderPage: React.FC = () => {
                               </CardHeader>
                               <CardContent>
                                 <div className="grid gap-2">
-                                  <Label htmlFor="newBackbone">Backbone Name</Label>
-                                  <Input
-                                    id="newBackbone"
-                                    placeholder="Enter backbone sequence"
-                                    value={newBackbone}
-                                    onChange={(e) => setNewBackbone(e.target.value)}
-                                    className="bg-sky-100 border-sky-400"
-                                  />
+                                  <div className="grid gap-2">
+                                    <Label htmlFor="newBackboneName">Backbone Name</Label>
+                                    <Input
+                                      id="newBackboneName"
+                                      placeholder="Enter backbone name"
+                                      value={newBackboneName}
+                                      onChange={(e) => setNewBackboneName(e.target.value)}
+                                      className="bg-sky-100 border-sky-400"
+                                    />
+                                  </div>
+                                  <div className="grid gap-2">
+                                    <Label htmlFor="newBackboneSequence">Backbone Sequence</Label>
+                                    <Input
+                                      id="newBackboneSequence"
+                                      placeholder="Enter backbone sequence"
+                                      value={newBackboneSequence}
+                                      onChange={(e) => setNewBackboneSequence(e.target.value)}
+                                      className="bg-sky-100 border-sky-400"
+                                    />
+                                  </div>
+                                  <div className="grid gap-2">
+                                    {backboneUploadError && <p className="text-red-500 text-sm">{backboneUploadError}</p>}
+                                  </div>
                                 </div>
+
                               </CardContent>
                               <CardFooter className="flex justify-end gap-2">
                                 <Button
                                   variant="outline"
                                   onClick={() => {
                                     setShowBackboneCard(false);
-                                    setNewBackbone("");
+                                    setNewBackboneName("");
+                                    setNewBackboneSequence("");
                                   }}
                                 >
                                   Cancel
                                 </Button>
                                 <Button
                                   onClick={() => {
-                                    // handle submission of new backbone here
-                                    console.log("New backbone:", newBackbone);
+                                    if (validateBackbone(newBackboneName, newBackboneSequence)) {
+                                      return;
+                                    }
+                                    // Add new backbone to state and select it
+                                    setBackbones((prev) => [...prev, newBackboneName]);
+                                    setSelectedBackbone(newBackboneName);
                                     setShowBackboneCard(false);
-                                    setNewBackbone("");
+                                    // Clear inputs and close modal
+                                    setNewBackboneName("");
+                                    setNewBackboneSequence("");
+                                    setShowBackboneCard(false);
                                   }}
                                 >
                                   Add
@@ -312,9 +416,15 @@ const OrderPage: React.FC = () => {
                                   const next = [...fragments];
                                   next[i] = e.target.value;
                                   setFragments(next);
+                                  setFragmentErrors((prev) => {
+                                    const nextErrors = [...prev];
+                                    nextErrors[i] = "";
+                                    return nextErrors;
+                                  });
                                 }}
-                                className="bg-sky-100 border-sky-400"
+                                className={`bg-sky-100 border-sky-400 ${fragmentErrors[i] ? "border-red-500" : ""}`}
                               />
+
 
                               {/* DNA type dropdown — only for Multi-insert */}
                               {selectedOption === 0 && (
@@ -324,9 +434,15 @@ const OrderPage: React.FC = () => {
                                     const nextTypes = [...dnaTypes];
                                     nextTypes[i] = val;
                                     setDnaTypes(nextTypes);
+
+                                    setFragmentErrors((prev) => {
+                                      const nextErrors = [...prev];
+                                      nextErrors[i] = "";
+                                      return nextErrors;
+                                    });
                                   }}
                                 >
-                                  <SelectTrigger className="w-[150px] bg-sky-100 border-sky-400">
+                                  <SelectTrigger className={`w-[150px] bg-sky-100 border-sky-400 ${fragmentErrors[i] ? "border-red-500" : ""}`}>
                                     <SelectValue placeholder="DNA type" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -337,8 +453,8 @@ const OrderPage: React.FC = () => {
                                 </Select>
                               )}
 
-                              {/* Trash icon — only if there is text */}
-                              {value.trim() !== "" && (
+                              {/* Trash icon — only if there is text or if a dna type is selected*/}
+                              {((value.trim() !== "") || (selectedOption===0 && dnaTypes[i]?.trim())) && (
                                 <button
                                   type="button"
                                   aria-label={`Delete fragment ${i + 1}`}
@@ -375,6 +491,10 @@ const OrderPage: React.FC = () => {
                                 </button>
                               )}
                             </div>
+                            {fragmentErrors[i] && (
+                              <p className="text-red-500 text-sm">{fragmentErrors[i]}</p>
+                            )}
+
                           </div>
                         ))}
 
@@ -390,7 +510,7 @@ const OrderPage: React.FC = () => {
                         </button>
                       )}
                     </div>
-
+                    {submissionError && <p className="text-red-500 text-sm">{submissionError}</p>}
 
                   </div>
                 </div>
