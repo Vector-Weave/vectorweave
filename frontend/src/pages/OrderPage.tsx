@@ -3,7 +3,10 @@ import Footer from "../components/Footer";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, Component } from "react";
+import CanvasJSReact from "@canvasjs/react-charts";
+
 import {
   Select,
   SelectContent,
@@ -59,6 +62,26 @@ const buildConfigs = {
   },
 } as const;
 
+const options = {
+  animationEnabled: true,
+  theme: "dark3",
+  backgroundColor: "#7dd3fc",
+  data: [{
+    type: "doughnut",
+    showInLegend: false,
+    yValueFormatString: "#,###'%'",
+    dataPoints: [
+      { name: "Unsatisfied", y: 5 },
+      { name: "Very Unsatisfied", y: 31 },
+      { name: "Very Satisfied", y: 40 },
+      { name: "Satisfied", y: 17 },
+      { name: "Neutral", y: 7 }
+    ]
+  }]
+}
+
+const { CanvasJSChart } = CanvasJSReact;
+
 const OrderPage: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<0 | 1 | 2 | null>(null);
   const [showBackboneCard, setShowBackboneCard] = useState(false);
@@ -78,6 +101,7 @@ const OrderPage: React.FC = () => {
   const [loggedIn, setLoggedIn] = useState(true);
 
   const config = selectedOption !== null ? buildConfigs[selectedOption] : null;
+
 
   const validatePlasmidName = (name: string) => {
     let error = "";
@@ -100,8 +124,8 @@ const OrderPage: React.FC = () => {
 
     fragments.forEach((frag, i) => {
       const trimmed = frag.trim();
-      if (trimmed === ""){
-        if(selectedOption===0 && dnaTypes[i]?.trim())
+      if (trimmed === "") {
+        if (selectedOption === 0 && dnaTypes[i]?.trim())
           errors[i] = "Please enter a corresponding fragment sequence.";
         else
           return;
@@ -124,15 +148,15 @@ const OrderPage: React.FC = () => {
     // Validate backbone name
     if (!name.trim())
       error = "Backbone name is required.";
-    else if (name.length > 50) 
-      error = "Backbone name must be 50 characters or less.";
-    else if (!/^[a-zA-Z0-9]+$/.test(name)) 
+    else if (name.length > 100)
+      error = "Backbone name must be 100 characters or less.";
+    else if (!/^[a-zA-Z0-9]+$/.test(name))
       error = "Backbone name can only contain letters and numbers.";
 
     // Validate sequence
-    else if (!sequence.trim()) 
+    else if (!sequence.trim())
       error = "Backbone sequence is required.";
-    else if (!/^[ACGTacgt]+$/.test(sequence)) 
+    else if (!/^[ACGTacgt]+$/.test(sequence))
       error = "Backbone sequence can only contain DNA bases (A, C, G, T).";
 
     setBackboneUploadError(error);
@@ -143,15 +167,15 @@ const OrderPage: React.FC = () => {
 
   const backboneSelected = () => {
     let error = ""
-    if (selectedBackbone==="" || selectedBackbone===null)
+    if (selectedBackbone === "" || selectedBackbone === null)
       error = "Select or upload a backbone."
     setBackboneSelectedError(error);
   }
 
   const validateOrder = () => {
     let error = "";
-    if (selectedOption===0 && !fragments.some(frag => frag.trim() !== "")) {
-      error ="Enter at least one fragment.";
+    if (selectedOption === 0 && !fragments.some(frag => frag.trim() !== "")) {
+      error = "Enter at least one fragment.";
     }
     setSubmissionError(error);
 
@@ -188,6 +212,7 @@ const OrderPage: React.FC = () => {
       <main className="flex-1 container mx-auto px-4 py-12" aria-label="Main">
         <h1 className="text-5xl font-extrabold mb-4">Get Started</h1>
         <hr className="my-6 border-gray-300" />
+
 
 
         <div className="flex flex-col items-center gap-2">
@@ -454,7 +479,7 @@ const OrderPage: React.FC = () => {
                               )}
 
                               {/* Trash icon — only if there is text or if a dna type is selected*/}
-                              {((value.trim() !== "") || (selectedOption===0 && dnaTypes[i]?.trim())) && (
+                              {((value.trim() !== "") || (selectedOption === 0 && dnaTypes[i]?.trim())) && (
                                 <button
                                   type="button"
                                   aria-label={`Delete fragment ${i + 1}`}
@@ -524,15 +549,14 @@ const OrderPage: React.FC = () => {
                 <div className="bg-sky-300 rounded-[20px] flex flex-col p-6 ">
                   <Label htmlFor="plasmid">Plasmid Build:</Label>
                   <div className="flex-1 flex items-center justify-center">
-                    <div className="mt-2 w-80 h-80 bg-gray-50 py-2 px-2 rounded-[30px] overflow-hidden flex flex-col">
-                      <div className="flex items-center justify-center flex-1 min-h-0">
-                        {config && (
-                          <img
-                            src={config.image}
-                            alt={config.title}
-                            className="max-h-full max-w-full object-contain"
+                    <div className="mt-2 w-80 h-80 bg-sky-300 py-2 px-2 rounded-[30px] overflow-hidden flex flex-col">
+                      <div className="flex items-center bg-sky-300 justify-center flex-1 min-h-0">
+                        
+                          <CanvasJSChart options={options}
+                          /* onRef={ref => this.chart = ref} */
                           />
-                        )}
+                          {/*You can get reference to the chart instance as shown above using onRef. This allows you to access all chart properties and methods*/}
+                        
                       </div>
                     </div>
                   </div>
