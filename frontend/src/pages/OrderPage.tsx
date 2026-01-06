@@ -99,9 +99,74 @@ const OrderPage: React.FC = () => {
   const [backboneSelectedError, setBackboneSelectedError] = useState("");
   //dummy variable for now - will change when connected to backend
   const [loggedIn, setLoggedIn] = useState(true);
-
   const config = selectedOption !== null ? buildConfigs[selectedOption] : null;
+  const backbonePercentageMap: Record<number, number> = {
+    1: 77,
+    2: 75,
+    3: 67,
+    4: 59,
+    5: 48,
+  };
 
+
+  const computeChartOptions = () => {
+    const dnaRegex = /^[ACGTacgt]+$/;
+    const nonEmptyFragments = fragments
+      .map(f => f.trim())
+      .filter(f => f !== "" && dnaRegex.test(f));
+
+    const fragmentCount = nonEmptyFragments.length;
+
+    //return null if not enough data
+    if (fragmentCount < 1 || !selectedBackbone)
+      return null;
+
+    const backbonePercent = backbonePercentageMap[fragmentCount];
+
+    const totalLength = nonEmptyFragments.reduce((sum, f) => sum + f.length, 0);
+
+    const remaining = 100 - backbonePercent;
+
+    //build data points array
+    const dataPoints: { y: number; label?: string }[] = [];
+
+    //backbone slice
+    dataPoints.push({ y: backbonePercent });
+
+    //fragment slices
+    if (fragmentCount === 1)
+      dataPoints.push({ y: remaining });
+    else {
+      nonEmptyFragments.forEach(frag => {
+        const ratio = frag.length / totalLength;
+        dataPoints.push({ y: ratio * remaining });
+      });
+    }
+    // Create a separate array of labels for tooltip only
+    const labels = ["Backbone", ...nonEmptyFragments.map((_, i) => `Fragment ${i + 1}`)];
+
+    const dataPointsWithTooltip = dataPoints.map((dp, i) => ({
+      ...dp,
+      toolTipContent: `${labels[i]}: ${dp.y.toFixed(1)}%`,
+    }));
+
+    return {
+      animationEnabled: true,
+      theme: "dark3",
+      backgroundColor: "#7dd3fc",
+      data: [
+        {
+          type: "doughnut",
+          showInLegend: false,
+          indexLabel: "",
+          toolTipContent: "{label}: {y}",
+          yValueFormatString: "#,###'%'",
+          dataPoints: dataPointsWithTooltip,
+        },
+      ],
+    };
+
+  };
 
   const validatePlasmidName = (name: string) => {
     let error = "";
@@ -235,28 +300,31 @@ const OrderPage: React.FC = () => {
                 <div
                   key={i}
                   onClick={() => {
-                    setSelectedOption(i as 0 | 1 | 2);
-                    const initialCount = buildConfigs[i as 0 | 1 | 2].fragments;
-                    setFragments(Array(initialCount).fill(""));
-                    if (i === 0) {
-                      setDnaTypes(Array(initialCount).fill(""));
-                    } else {
-                      setDnaTypes([]);
-                    }
-                    //re-set plasmid name, backbone, and fragments
-                    setPlasmidName("");
-                    setSelectedBackbone(null);
-                    setDnaTypes([]);
-                    //re-set errors
-                    setFragmentErrors([]);
-                    setPlasmidError("");
-                    setSubmissionError("");
-                  }}
-                  className={`
-                    w-40 h-40 py-2 px-2 rounded-[30px]
-                    transform transition-all duration-300
-                    overflow-hidden flex flex-col cursor-pointer
+                    if (i !== selectedOption) {
+                      setSelectedOption(i as 0 | 1 | 2);
+                      const initialCount = buildConfigs[i as 0 | 1 | 2].fragments;
+                      setFragments(Array(initialCount).fill(""));
 
+                      //only add dna type for multi insert
+                      if (i === 0) {
+                        setDnaTypes(Array(initialCount).fill(""));
+                      } else {
+                        setDnaTypes([]);
+                      }
+                      //re-set plasmid name, backbone, and fragments
+                      setPlasmidName("");
+                      setSelectedBackbone(null);
+                      setDnaTypes([]);
+                      //re-set errors
+                      setFragmentErrors([]);
+                      setPlasmidError("");
+                      setSubmissionError("");
+                      setBackboneSelectedError("");
+                      setBackboneUploadError("");
+                    }
+
+                  }}
+                  className={`w-40 h-40 py-2 px-2 rounded-[30px] transform transition-all duration-300 overflow-hidden flex flex-col cursor-pointer
                     ${selectedOption === i
                       ? "bg-sky-400 ring-4 ring-sky-500 scale-105"
                       : "bg-sky-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg"}
@@ -440,14 +508,20 @@ const OrderPage: React.FC = () => {
                                 placeholder="Enter a sequence"
                                 value={value}
                                 onChange={(e) => {
-                                  const next = [...fragments];
-                                  next[i] = e.target.value;
-                                  setFragments(next);
-                                  setFragmentErrors((prev) => {
-                                    const nextErrors = [...prev];
-                                    nextErrors[i] = "";
-                                    return nextErrors;
-                                  });
+                                  const value = e.target.value;
+                                  const nextFragments = [...fragments];
+                                  nextFragments[i] = value;
+                                  setFragments(nextFragments);
+
+                                  // Validate the current fragment
+                                  const dnaRegex = /^[ACGTacgt]*$/; // allow empty while typing
+                                  const error = value.trim() !== "" && !dnaRegex.test(value)
+                                    ? "Fragment can only contain A, C, G, or T."
+                                    : "";
+
+                                  const nextErrors = [...fragmentErrors];
+                                  nextErrors[i] = error;
+                                  setFragmentErrors(nextErrors);
                                 }}
                                 className={`bg-sky-100 border-sky-400 ${fragmentErrors[i] ? "border-red-500" : ""}`}
                               />
@@ -553,12 +627,13 @@ const OrderPage: React.FC = () => {
                   <div className="flex-1 flex items-center justify-center">
                     <div className="mt-2 w-80 h-80 bg-sky-300 py-2 px-2 rounded-[30px] overflow-hidden flex flex-col">
                       <div className="flex items-center bg-sky-300 justify-center flex-1 min-h-0">
-                        
-                          <CanvasJSChart options={options}
-                          /* onRef={ref => this.chart = ref} */
-                          />
-                          {/*You can get reference to the chart instance as shown above using onRef. This allows you to access all chart properties and methods*/}
-                        
+                        {(() => {
+                          const dynamicOptions = computeChartOptions();
+                          if (!dynamicOptions) {
+                            return;
+                          }
+                          return <CanvasJSChart options={dynamicOptions} />;
+                        })()}
                       </div>
                     </div>
                   </div>
