@@ -25,8 +25,12 @@ const Header: React.FC = () => {
         </nav>
       </div>
       <div className="space-x-2">
-        <Button>Sign In</Button>
-        <Button>Order Now</Button>
+        <Link to="/auth">
+          <Button>Sign In</Button>
+        </Link>
+        <Link to="/order">
+          <Button>Order Now</Button>
+        </Link>
       </div>
     </div>
   );
