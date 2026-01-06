@@ -71,11 +71,11 @@ const options = {
     showInLegend: false,
     yValueFormatString: "#,###'%'",
     dataPoints: [
-      { name: "Unsatisfied", y: 5 },
-      { name: "Very Unsatisfied", y: 31 },
-      { name: "Very Satisfied", y: 40 },
-      { name: "Satisfied", y: 17 },
-      { name: "Neutral", y: 7 }
+      { y: 5 },
+      { y: 31 },
+      { y: 40 },
+      { y: 17 },
+      { y: 7 }
     ]
   }]
 }
@@ -83,17 +83,17 @@ const options = {
 const { CanvasJSChart } = CanvasJSReact;
 
 const OrderPage: React.FC = () => {
-  const [selectedOption, setSelectedOption] = useState<0 | 1 | 2 | null>(null);
+  const [selectedOption, setSelectedOption] = useState<0 | 1 | 2 | null>(0);
   const [showBackboneCard, setShowBackboneCard] = useState(false);
   const [newBackboneName, setNewBackboneName] = useState("");
   const [newBackboneSequence, setNewBackboneSequence] = useState("");
   const [backboneUploadError, setBackboneUploadError] = useState("");
-  const [fragments, setFragments] = useState<string[]>([]);
+  const [fragments, setFragments] = useState<string[]>(Array(buildConfigs[0].fragments).fill(""));
   const [plasmidName, setPlasmidName] = useState("");
   const [plasmidError, setPlasmidError] = useState("");
   const [fragmentErrors, setFragmentErrors] = useState<string[]>([]);
   const [submissionError, setSubmissionError] = useState("");
-  const [dnaTypes, setDnaTypes] = useState<string[]>([]);
+  const [dnaTypes, setDnaTypes] = useState<string[]>(Array(buildConfigs[0].fragments).fill(""));
   const [backbones, setBackbones] = useState<string[]>([]);
   const [selectedBackbone, setSelectedBackbone] = useState<string | null>(null);
   const [backboneSelectedError, setBackboneSelectedError] = useState("");
@@ -197,6 +197,7 @@ const OrderPage: React.FC = () => {
   }
 
   useEffect(() => {
+
     if (loggedIn) {
       setBackbones(["puc", "pcdna"]);
     }
@@ -204,6 +205,7 @@ const OrderPage: React.FC = () => {
       setBackbones([]);
       setSelectedBackbone(null);
     }
+
   }, [loggedIn]);
 
   return (
