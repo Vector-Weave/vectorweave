@@ -94,11 +94,11 @@ const OrderPage: React.FC = () => {
   const [fragmentErrors, setFragmentErrors] = useState<string[]>([]);
   const [submissionError, setSubmissionError] = useState("");
   const [dnaTypes, setDnaTypes] = useState<string[]>(Array(buildConfigs[0].fragments).fill(""));
-
+  const [showLoginCard, setShowLoginCard] = useState(false);
   const [selectedBackbone, setSelectedBackbone] = useState<string | null>(null);
   const [backboneSelectedError, setBackboneSelectedError] = useState("");
   //dummy variable for now - will change when connected to backend
-  const [loggedIn, setLoggedIn] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
   const config = selectedOption !== null ? buildConfigs[selectedOption] : null;
   const backbonePercentageMap: Record<number, number> = {
     1: 77,
@@ -107,6 +107,13 @@ const OrderPage: React.FC = () => {
     4: 59,
     5: 48,
   };
+  //multi-site mutagenesis
+  const MAX_MUTATIONS = 4;
+  const [mutations, setMutations] = useState<string[]>(Array(MAX_MUTATIONS).fill(""));
+  const [mutationErrors, setMutationErrors] = useState<string[]>(Array(MAX_MUTATIONS).fill(""));
+  const mutationRegex = /^[ACGTacgt0-9]*$/;
+  const [mutationSubmitError, setMutationSubmitError] = useState("");
+
 
   type Backbone = {
     name: string;
@@ -310,13 +317,72 @@ const OrderPage: React.FC = () => {
     return (error !== "");
   }
 
+  const validateMutations = () => {
+    if (selectedOption !== 1) {
+      setMutationSubmitError("");
+      return false;
+    }
+
+    const backboneLength = getBackboneLength();
+    if (!backboneLength) {
+      setMutationSubmitError("A backbone must be selected to validate mutations.");
+      return true;
+    }
+
+    // Valid base substitutions
+    const validPairs: Record<string, string> = {
+      A: "T",
+      T: "A",
+      C: "G",
+      G: "C",
+    };
+
+    for (let i = 0; i < mutations.length; i++) {
+      const mut = mutations[i].trim();
+      if (!mut) continue;
+
+      // Strict format: Base + number + Base
+      const match = mut.match(/^([ACGTacgt])(\d+)([ACGTacgt])$/);
+      if (!match) {
+        setMutationSubmitError(
+          `Mutation ${i + 1} must be in the format A123T (A, C, G, T only).`
+        );
+        return true;
+      }
+
+      const fromBase = match[1].toUpperCase();
+      const position = parseInt(match[2], 10);
+      const toBase = match[3].toUpperCase();
+
+      //Base-pair validity
+      if (validPairs[fromBase] !== toBase) {
+        setMutationSubmitError(
+          `Mutation ${i + 1} is invalid: ${fromBase} can only mutate to ${validPairs[fromBase]}.`
+        );
+        return true;
+      }
+
+      //Position bounds
+      if (position < 1 || position > backboneLength) {
+        setMutationSubmitError(
+          `Mutation ${i + 1} position ${position} is outside the backbone length (${backboneLength} bp).`
+        );
+        return true;
+      }
+    }
+
+    setMutationSubmitError("");
+    return false;
+  }
+
   const handleSubmit = () => {
     const plasmidErr = !validatePlasmidName(plasmidName);
     const hasFragmentErrors = validateFragments();
     const hasOrderErrors = validateOrder();
     const backboneErr = backboneSelected();
+    const hasMutationErrors = validateMutations();
 
-    if (plasmidErr || hasFragmentErrors || hasOrderErrors || backboneErr) {
+    if (plasmidErr || hasFragmentErrors || hasOrderErrors || backboneErr || hasMutationErrors) {
       return false;
     }
 
@@ -327,6 +393,11 @@ const OrderPage: React.FC = () => {
     const bb = backbones.find(b => b.name === selectedBackbone);
     if (!bb) return "";
     return `${bb.sequence.length} bp`;
+  }
+  const getBackboneLength = (): number => {
+    const bb = backbones.find(b => b.name === selectedBackbone);
+    if (!bb) return 0;
+    return bb.sequence.length;
   }
 
   useEffect(() => {
@@ -379,7 +450,12 @@ const OrderPage: React.FC = () => {
                       //only add dna type for multi insert
                       if (i === 0) {
                         setDnaTypes(Array(initialCount).fill(""));
-                      } else {
+                      }
+                      else if (i == 1) {
+                        setMutations(Array(MAX_MUTATIONS).fill(""));
+                        setMutationErrors(Array(MAX_MUTATIONS).fill(""));
+                      }
+                      else {
                         setDnaTypes([]);
                       }
                       //re-set plasmid name, backbone, and fragments
@@ -392,6 +468,8 @@ const OrderPage: React.FC = () => {
                       setSubmissionError("");
                       setBackboneSelectedError("");
                       setBackboneUploadError("");
+                      setMutationSubmitError("");
+                      setMutationErrors([]);
                     }
 
                   }}
@@ -463,7 +541,14 @@ const OrderPage: React.FC = () => {
                         {/* Message for when user is logged out */}
                         {!loggedIn && (
                           <p className="text-sm text-sky-800">
-                            Log in to view your previously used backbones
+                            <button
+                              type="button"
+                              onClick={() => setShowLoginCard(true)}
+                              className="font-semibold underline hover:text-sky-600"
+                            >
+                              Log in
+                            </button>{" "}
+                            to view your previously used backbones
                           </p>
                         )}
                         <Select
@@ -568,121 +653,164 @@ const OrderPage: React.FC = () => {
 
                     <hr className="border-sky-900 my-4" />
                     <div className="grid gap-2">
-                      {config &&
-                        fragments.map((value, i) => (
-                          <div key={i} className="grid gap-2">
-                            <Label>Fragment {i + 1}</Label>
+                      {selectedOption === 0 && (
+                        <>
+                          {config &&
+                            fragments.map((value, i) => (
+                              <div key={i} className="grid gap-2">
+                                <Label>Fragment {i + 1}</Label>
 
-                            <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    placeholder="Enter a sequence"
+                                    value={value}
+                                    onChange={(e) => {
+                                      const value = e.target.value;
+                                      const nextFragments = [...fragments];
+                                      nextFragments[i] = value;
+                                      setFragments(nextFragments);
+
+                                      // Validate the current fragment
+                                      const dnaRegex = /^[ACGTacgt]*$/; // allow empty while typing
+                                      const error = value.trim() !== "" && !dnaRegex.test(value)
+                                        ? "Fragment can only contain A, C, G, or T."
+                                        : "";
+
+                                      const nextErrors = [...fragmentErrors];
+                                      nextErrors[i] = error;
+                                      setFragmentErrors(nextErrors);
+                                    }}
+                                    className={`bg-sky-100 border-sky-400 ${fragmentErrors[i] ? "border-red-500" : ""}`}
+                                  />
+
+
+                                  {/* DNA type dropdown — only for Multi-insert */}
+                                  {selectedOption === 0 && (
+                                    <Select
+                                      value={dnaTypes[i] || ""}
+                                      onValueChange={(val) => {
+                                        const nextTypes = [...dnaTypes];
+                                        nextTypes[i] = val;
+                                        setDnaTypes(nextTypes);
+
+                                        setFragmentErrors((prev) => {
+                                          const nextErrors = [...prev];
+                                          nextErrors[i] = "";
+                                          return nextErrors;
+                                        });
+                                      }}
+                                    >
+                                      <SelectTrigger className={`w-[150px] bg-sky-100 border-sky-400 ${fragmentErrors[i] ? "border-red-500" : ""}`}>
+                                        <SelectValue placeholder="DNA type" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="genomic">Genomic</SelectItem>
+                                        <SelectItem value="synthetic">Synthetic</SelectItem>
+                                        <SelectItem value="plasmid">Plasmid</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  )}
+
+                                  {/* Trash icon — only if there is text or if a dna type is selected*/}
+                                  {((value.trim() !== "") || (selectedOption === 0 && dnaTypes[i]?.trim())) && (
+                                    <button
+                                      type="button"
+                                      aria-label={`Delete fragment ${i + 1}`}
+                                      onClick={() => {
+                                        setFragments((prev) => {
+                                          const next = [...prev];
+
+                                          // If fragment 4 or 5 → remove it
+                                          if (i >= 3) {
+                                            next.splice(i, 1);
+                                          } else {
+                                            // Otherwise just clear it
+                                            next[i] = "";
+                                          }
+
+                                          return next;
+                                        });
+
+                                        // Also reset the DNA type at the same index
+                                        setDnaTypes((prev) => {
+                                          const nextTypes = [...prev];
+                                          if (i >= 3) {
+                                            // remove extra fragment type if removed
+                                            nextTypes.splice(i, 1);
+                                          } else {
+                                            nextTypes[i] = "";
+                                          }
+                                          return nextTypes;
+                                        });
+                                      }}
+                                      className="text-sky-700 hover:text-red-500 transition"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                </div>
+                                {fragmentErrors[i] && (
+                                  <p className="text-red-500 text-sm">{fragmentErrors[i]}</p>
+                                )}
+
+                              </div>
+                            ))}
+
+
+                          {/* Only show "Add fragment" if fragments > 1 & < */}
+                          {config && config.fragments > 1 && fragments.length < 5 && (
+                            <button
+                              type="button"
+                              onClick={() => setFragments((prev) => [...prev, ""])}
+                              className="inline-block text-sm underline-offset-4 hover:underline my-2 text-left"
+                            >
+                              + Add fragment
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* MUTAGENESIS (new mutation UI) */}
+                      {selectedOption === 1 && (
+                        <>
+                          {mutations.map((value, i) => (
+                            <div key={i} className="grid gap-2">
+                              <Label>Mutation {i + 1}</Label>
                               <Input
-                                placeholder="Enter a sequence"
+                                placeholder="e.g. A123T"
                                 value={value}
                                 onChange={(e) => {
-                                  const value = e.target.value;
-                                  const nextFragments = [...fragments];
-                                  nextFragments[i] = value;
-                                  setFragments(nextFragments);
+                                  const val = e.target.value;
 
-                                  // Validate the current fragment
-                                  const dnaRegex = /^[ACGTacgt]*$/; // allow empty while typing
-                                  const error = value.trim() !== "" && !dnaRegex.test(value)
-                                    ? "Fragment can only contain A, C, G, or T."
-                                    : "";
+                                  //update mutations
+                                  setMutations((prev) => {
+                                    const next = [...prev];
+                                    next[i] = val;
+                                    return next;
+                                  });
 
-                                  const nextErrors = [...fragmentErrors];
-                                  nextErrors[i] = error;
-                                  setFragmentErrors(nextErrors);
+                                  //validate mutations
+                                  const error =
+                                    val.trim() !== "" && !mutationRegex.test(val)
+                                      ? "Mutation can only contain A, C, T, G, and numbers."
+                                      : "";
+
+                                  setMutationErrors((prev) => {
+                                    const next = [...prev];
+                                    next[i] = error;
+                                    return next;
+                                  });
                                 }}
-                                className={`bg-sky-100 border-sky-400 ${fragmentErrors[i] ? "border-red-500" : ""}`}
+                                className={`bg-sky-100 border-sky-400 ${mutationErrors[i] ? "border-red-500" : ""}`}
                               />
-
-
-                              {/* DNA type dropdown — only for Multi-insert */}
-                              {selectedOption === 0 && (
-                                <Select
-                                  value={dnaTypes[i] || ""}
-                                  onValueChange={(val) => {
-                                    const nextTypes = [...dnaTypes];
-                                    nextTypes[i] = val;
-                                    setDnaTypes(nextTypes);
-
-                                    setFragmentErrors((prev) => {
-                                      const nextErrors = [...prev];
-                                      nextErrors[i] = "";
-                                      return nextErrors;
-                                    });
-                                  }}
-                                >
-                                  <SelectTrigger className={`w-[150px] bg-sky-100 border-sky-400 ${fragmentErrors[i] ? "border-red-500" : ""}`}>
-                                    <SelectValue placeholder="DNA type" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="genomic">Genomic</SelectItem>
-                                    <SelectItem value="synthetic">Synthetic</SelectItem>
-                                    <SelectItem value="plasmid">Plasmid</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              )}
-
-                              {/* Trash icon — only if there is text or if a dna type is selected*/}
-                              {((value.trim() !== "") || (selectedOption === 0 && dnaTypes[i]?.trim())) && (
-                                <button
-                                  type="button"
-                                  aria-label={`Delete fragment ${i + 1}`}
-                                  onClick={() => {
-                                    setFragments((prev) => {
-                                      const next = [...prev];
-
-                                      // If fragment 4 or 5 → remove it
-                                      if (i >= 3) {
-                                        next.splice(i, 1);
-                                      } else {
-                                        // Otherwise just clear it
-                                        next[i] = "";
-                                      }
-
-                                      return next;
-                                    });
-
-                                    // Also reset the DNA type at the same index
-                                    setDnaTypes((prev) => {
-                                      const nextTypes = [...prev];
-                                      if (i >= 3) {
-                                        // remove extra fragment type if removed
-                                        nextTypes.splice(i, 1);
-                                      } else {
-                                        nextTypes[i] = "";
-                                      }
-                                      return nextTypes;
-                                    });
-                                  }}
-                                  className="text-sky-700 hover:text-red-500 transition"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              )}
+                              {mutationErrors[i] && (<p className="text-red-500 text-sm">{mutationErrors[i]}</p>)}
                             </div>
-                            {fragmentErrors[i] && (
-                              <p className="text-red-500 text-sm">{fragmentErrors[i]}</p>
-                            )}
-
-                          </div>
-                        ))}
-
-
-                      {/* Only show "Add fragment" if fragments > 1 & < */}
-                      {config && config.fragments > 1 && fragments.length < 5 && (
-                        <button
-                          type="button"
-                          onClick={() => setFragments((prev) => [...prev, ""])}
-                          className="inline-block text-sm underline-offset-4 hover:underline my-2 text-left"
-                        >
-                          + Add fragment
-                        </button>
+                          ))}
+                        </>
                       )}
                     </div>
                     {submissionError && <p className="text-red-500 text-sm">{submissionError}</p>}
-
+                    {mutationSubmitError && (<p className="text-red-500 text-sm mt-2">{mutationSubmitError}</p>``)}
                   </div>
                 </div>
 
@@ -798,6 +926,46 @@ const OrderPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+
+
+        {showLoginCard && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="text-2xl text-center">
+                  Welcome to VectorWeave
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Sign In Form */}
+                <form
+                  className="space-y-4"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setLoggedIn(true);
+                    setShowLoginCard(false);
+                  }}
+                >
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input type="email" required />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Password</Label>
+                    <Input type="password" required />
+                  </div>
+
+                  <Button type="submit" className="w-full">
+                    Sign In
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
       </main>
       <Footer />
     </div>
