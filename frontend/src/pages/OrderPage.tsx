@@ -1020,7 +1020,7 @@ const OrderPage: React.FC = () => {
                     );
                   })()}
                   {selectedOption === 2 && (() => {
-                    const pricing = computeOwnBackbonePrice`();
+                    const pricing = computeOwnBackbonePrice();
                     if (!pricing) return null;
 
                     return (
