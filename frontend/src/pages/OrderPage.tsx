@@ -3,7 +3,7 @@ import Footer from "../components/Footer";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react";
-
+import { MULTI_INSERT_PRCIING } from "@/config/pricing";
 import React, { useState, useEffect, Component } from "react";
 import CanvasJSReact from "@canvasjs/react-charts";
 
@@ -94,7 +94,7 @@ const OrderPage: React.FC = () => {
   const [fragmentErrors, setFragmentErrors] = useState<string[]>([]);
   const [submissionError, setSubmissionError] = useState("");
   const [dnaTypes, setDnaTypes] = useState<string[]>(Array(buildConfigs[0].fragments).fill(""));
-  const [backbones, setBackbones] = useState<string[]>([]);
+
   const [selectedBackbone, setSelectedBackbone] = useState<string | null>(null);
   const [backboneSelectedError, setBackboneSelectedError] = useState("");
   //dummy variable for now - will change when connected to backend
@@ -108,6 +108,11 @@ const OrderPage: React.FC = () => {
     5: 48,
   };
 
+  type Backbone = {
+    name: string;
+    sequence: string;
+  }
+  const [backbones, setBackbones] = useState<Backbone[]>([]);
 
   const computeChartOptions = () => {
     const dnaRegex = /^[ACGTacgt]+$/;
@@ -166,6 +171,63 @@ const OrderPage: React.FC = () => {
       ],
     };
 
+  };
+
+  const isValidDNA = (seq: string) => /^[ACGTacgt]+$/.test(seq);
+
+  const computeGCPercent = (seq: string) => {
+    const gcCount = seq.match(/[GCgc]/g)?.length ?? 0;
+    return (gcCount / seq.length) * 100;
+  }
+
+  const computeMultiInsertPrice = () => {
+    //must select backbone
+    if (!selectedBackbone) return null;
+
+    const validFragments = fragments.map((f, i) => ({ seq: f.trim(), index: i }))
+      .filter(f => f.seq !== "" && isValidDNA(f.seq));
+    //if no valid fragments, return
+    if (validFragments.length < 1) return null;
+
+    const fragmentPricing: {
+      index: number;
+      price: number;
+      surcharges: number;
+    }[] = [];
+
+    let total = MULTI_INSERT_PRCIING.BASE_PRICE;
+
+    validFragments.forEach((frag, idx) => {
+      let price = 0;
+      let surcharges = 0;
+
+      //first frag included in base price
+      if (idx > 0) {
+        price += MULTI_INSERT_PRCIING.ADDITIONAL_FRAGMENT_PRICE;
+        total += MULTI_INSERT_PRCIING.ADDITIONAL_FRAGMENT_PRICE;
+      }
+
+      const gc = computeGCPercent(frag.seq);
+
+      if (gc > MULTI_INSERT_PRCIING.GC_THRESHOLD_PERCENT)
+        surcharges += MULTI_INSERT_PRCIING.SURCHARGE_PRICE;
+      if (frag.seq.length > MULTI_INSERT_PRCIING.LENGTH_THRESHOLD_BP)
+        surcharges += MULTI_INSERT_PRCIING.SURCHARGE_PRICE;
+
+      total += surcharges;
+
+      fragmentPricing.push({
+        index: frag.index,
+        price,
+        surcharges,
+      });
+    });
+
+    return {
+      backbonePrice: MULTI_INSERT_PRCIING.BASE_PRICE,
+      fragments: fragmentPricing,
+      total
+    };
   };
 
   const validatePlasmidName = (name: string) => {
@@ -261,10 +323,19 @@ const OrderPage: React.FC = () => {
     return true;
   }
 
+  const getBackboneSize = (): string => {
+    const bb = backbones.find(b => b.name === selectedBackbone);
+    if (!bb) return "";
+    return `${bb.sequence.length} bp`;
+  }
+
   useEffect(() => {
 
     if (loggedIn) {
-      setBackbones(["puc", "pcdna"]);
+      setBackbones([
+        { name: "puc", sequence: "ACGTACGTACGTACGT" },
+        { name: "pcdna", sequence: "ACGTACGTAAAAACCCCCGGGGGTTTTT" }
+      ]);
     }
     else {
       setBackbones([]);
@@ -407,7 +478,7 @@ const OrderPage: React.FC = () => {
                           </SelectTrigger>
                           <SelectContent>
                             {backbones.map((b, i) => (
-                              <SelectItem key={i} value={b}>{b}</SelectItem>
+                              <SelectItem key={i} value={b.name}>{b.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -477,13 +548,12 @@ const OrderPage: React.FC = () => {
                                       return;
                                     }
                                     // Add new backbone to state and select it
-                                    setBackbones((prev) => [...prev, newBackboneName]);
+                                    setBackbones((prev) => [...prev, { name: newBackboneName, sequence: newBackboneSequence }]);
                                     setSelectedBackbone(newBackboneName);
                                     setShowBackboneCard(false);
                                     // Clear inputs and close modal
                                     setNewBackboneName("");
                                     setNewBackboneSequence("");
-                                    setShowBackboneCard(false);
                                   }}
                                 >
                                   Add
@@ -647,29 +717,55 @@ const OrderPage: React.FC = () => {
                   <hr className="border-sky-900 my-2" />
 
                   {/* Rows */}
-                  {config && (
-                    <div className="grid grid-cols-3 gap-y-2 text-sm">
-                      {config.rows.map((row, i) => (
-                        <React.Fragment key={i}>
-                          <span>{row.name}</span>
-                          <span className="text-center">{row.size}</span>
-                          <span className="text-right">${row.price}</span>
-                        </React.Fragment>
-                      ))}
-                    </div>
-                  )}
+                  {selectedOption === 0 && (() => {
+                    const pricing = computeMultiInsertPrice();
+                    if (!pricing) return null;
+
+                    return (
+                      <div className="grid grid-cols-3 gap-y-2 text-sm">
+                        {/* Backbone row */}
+                        <span>{selectedBackbone}</span>
+                        <span className="text-center">{getBackboneSize()}</span>
+                        <span className="text-right">
+                          ${pricing.backbonePrice}
+                        </span>
+
+                        {/* Fragment rows */}
+                        {pricing.fragments.map(({ index, price, surcharges }) => {
+                          const seq = fragments[index].trim();
+                          const totalFragmentPrice = price + surcharges;
+
+                          return (
+                            <React.Fragment key={index}>
+                              <span>Fragment {index + 1}</span>
+                              <span className="text-center">{seq.length} bp</span>
+                              <span className="text-right">
+                                {totalFragmentPrice === 0
+                                  ? "Included"
+                                  : `$${totalFragmentPrice}`}
+                              </span>
+                            </React.Fragment>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
 
                   <hr className="border-sky-900 my-2" />
 
                   {/* Total */}
-                  {config && (
-                    <div className="flex justify-between font-semibold">
-                      <span>Total</span>
-                      <span>
-                        ${config.rows.reduce((sum, r) => sum + r.price, 0)}
-                      </span>
-                    </div>
-                  )}
+                  {selectedOption === 0 && (() => {
+                    const pricing = computeMultiInsertPrice();
+                    if (!pricing) return null;
+                    return (
+                      <div className="flex justify-between font-semibold">
+                        <span>
+                          Total
+                        </span>
+                        <span>${pricing.total}</span>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Buttons below the box */}
