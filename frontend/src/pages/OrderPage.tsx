@@ -3,7 +3,7 @@ import Footer from "../components/Footer";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react";
-import { MULTI_INSERT_PRCIING } from "@/config/pricing";
+import { MULTI_INSERT_PRCIING, MULTI_MUTAGENESIS_PRICING, OWN_BACKBONE_PRICING } from "@/config/pricing";
 import React, { useState, useEffect, Component } from "react";
 import CanvasJSReact from "@canvasjs/react-charts";
 
@@ -54,7 +54,7 @@ const buildConfigs = {
   2: {
     title: "New backbone design",
     showBackbone: false,
-    fragments: 0,
+    fragments: 3,
     image: "assets/3.png",
     rows: [
       { name: "Custom backbone", size: "5.0 kb", price: 300 },
@@ -62,23 +62,6 @@ const buildConfigs = {
   },
 } as const;
 
-const options = {
-  animationEnabled: true,
-  theme: "dark3",
-  backgroundColor: "#7dd3fc",
-  data: [{
-    type: "doughnut",
-    showInLegend: false,
-    yValueFormatString: "#,###'%'",
-    dataPoints: [
-      { y: 5 },
-      { y: 31 },
-      { y: 40 },
-      { y: 17 },
-      { y: 7 }
-    ]
-  }]
-}
 
 const { CanvasJSChart } = CanvasJSReact;
 
@@ -112,6 +95,7 @@ const OrderPage: React.FC = () => {
   const [mutations, setMutations] = useState<string[]>(Array(MAX_MUTATIONS).fill(""));
   const [mutationErrors, setMutationErrors] = useState<string[]>(Array(MAX_MUTATIONS).fill(""));
   const mutationRegex = /^[ACGTacgt0-9]*$/;
+  const mutationFormat = /^([ACGT])(\d+)([ACGT])$/i;
   const [mutationSubmitError, setMutationSubmitError] = useState("");
 
 
@@ -237,6 +221,78 @@ const OrderPage: React.FC = () => {
     };
   };
 
+  const computeMutagenesisPrice = () => {
+    const validMutations = mutations
+      .map((m, i) => ({ value: m.trim(), index: i }))
+      // Only keep non-empty mutations that match the format
+      .filter(m => m.value !== "" && mutationFormat.test(m.value));
+
+    if (validMutations.length === 0) return null;
+
+    const mutationPricing = validMutations.map((m, idx) => ({
+      index: m.index,
+      price: idx === 0 ? 0 : MULTI_MUTAGENESIS_PRICING.ADDITIONAL_MUTATION_PRICE,
+      included: idx === 0,
+    }));
+
+    const extraCount = Math.max(0, validMutations.length - 1);
+
+    return {
+      base: MULTI_MUTAGENESIS_PRICING.BASE_PRICE,
+      mutations: mutationPricing,
+      total:
+        MULTI_MUTAGENESIS_PRICING.BASE_PRICE +
+        extraCount * MULTI_MUTAGENESIS_PRICING.ADDITIONAL_MUTATION_PRICE,
+    };
+  };
+
+  const computeOwnBackbonePrice = () => {
+    const validFragments = fragments.map((f, i) => ({ seq: f.trim(), index: i }))
+      .filter(f => f.seq !== "" && isValidDNA(f.seq));
+    //if no valid fragments, return
+    if (validFragments.length < 1) return null;
+
+    const fragmentPricing: {
+      index: number;
+      price: number;
+      surcharges: number;
+    }[] = [];
+
+    let total = OWN_BACKBONE_PRICING.BASE_PRICE;
+
+    validFragments.forEach((frag, idx) => {
+      let price = 0;
+      let surcharges = 0;
+
+      //first frag included in base price
+      if (idx > 0) {
+        price += OWN_BACKBONE_PRICING.ADDITIONAL_FRAGMENT_PRICE;
+        total += OWN_BACKBONE_PRICING.ADDITIONAL_FRAGMENT_PRICE;
+      }
+
+      const gc = computeGCPercent(frag.seq);
+
+      if (gc > OWN_BACKBONE_PRICING.GC_THRESHOLD_PERCENT)
+        surcharges += OWN_BACKBONE_PRICING.SURCHARGE_PRICE;
+      if (frag.seq.length > OWN_BACKBONE_PRICING.LENGTH_THRESHOLD_BP)
+        surcharges += OWN_BACKBONE_PRICING.SURCHARGE_PRICE;
+
+      total += surcharges;
+
+      fragmentPricing.push({
+        index: frag.index,
+        price,
+        surcharges,
+      });
+    });
+
+    return {
+      basePrice: MULTI_INSERT_PRCIING.BASE_PRICE,
+      fragments: fragmentPricing,
+      total
+    };
+  };
+
   const validatePlasmidName = (name: string) => {
     let error = "";
     if (name.trim() === "") {
@@ -308,7 +364,7 @@ const OrderPage: React.FC = () => {
 
   const validateOrder = () => {
     let error = "";
-    if (selectedOption === 0 && !fragments.some(frag => frag.trim() !== "")) {
+    if ((selectedOption === 0 || selectedOption === 2) && !fragments.some(frag => frag.trim() !== "")) {
       error = "Enter at least one fragment.";
     }
     setSubmissionError(error);
@@ -535,7 +591,7 @@ const OrderPage: React.FC = () => {
                   </div>
 
                   <div className="grid gap-2">
-                    {config?.showBackbone && (
+                    {(selectedOption === 0 || selectedOption === 1) && (
                       <div className="grid gap-2">
                         <Label>Vector Backbone</Label>
                         {/* Message for when user is logged out */}
@@ -653,7 +709,7 @@ const OrderPage: React.FC = () => {
 
                     <hr className="border-sky-900 my-4" />
                     <div className="grid gap-2">
-                      {selectedOption === 0 && (
+                      {(selectedOption === 0 || selectedOption === 2) && (
                         <>
                           {config &&
                             fragments.map((value, i) => (
@@ -810,7 +866,7 @@ const OrderPage: React.FC = () => {
                       )}
                     </div>
                     {submissionError && <p className="text-red-500 text-sm">{submissionError}</p>}
-                    {mutationSubmitError && (<p className="text-red-500 text-sm mt-2">{mutationSubmitError}</p>``)}
+                    {mutationSubmitError && (<p className="text-red-500 text-sm mt-2">{mutationSubmitError}</p>)}
                   </div>
                 </div>
 
@@ -838,7 +894,9 @@ const OrderPage: React.FC = () => {
                   {/* Table header */}
                   <div className="grid grid-cols-3 w-full text-sm font-medium mt-2">
                     <span>Name</span>
-                    <span className="text-center">Size</span>
+                    <span className="text-center">
+                      {selectedOption === 1 ? "Mutation" : "Size"}
+                    </span>
                     <span className="text-right">Price</span>
                   </div>
 
@@ -879,6 +937,62 @@ const OrderPage: React.FC = () => {
                     );
                   })()}
 
+                  {selectedOption === 1 && (() => {
+                    const pricing = computeMutagenesisPrice();
+                    if (!pricing) return null;
+
+                    return (
+                      <div className="grid grid-cols-3 gap-y-2 text-sm">
+                        {/* Backbone row */}
+                        <span>{selectedBackbone}</span>
+                        <span className="text-center">—</span>
+                        <span className="text-right">
+                          ${pricing.base}
+                        </span>
+
+                        {/* Mutation rows */}
+                        {pricing.mutations.map(({ index, price, included }) => (
+                          <React.Fragment key={index}>
+                            <span>Mutation {index + 1}</span>
+                            <span className="text-center">
+                              {mutations[index]}
+                            </span>
+                            <span className="text-right">
+                              {included ? "Included" : `$${price}`}
+                            </span>
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                  {selectedOption === 2 && (() => {
+                    const pricing = computeOwnBackbonePrice();
+                    if (!pricing) return null;
+
+                    return (
+                      <div className="grid grid-cols-3 gap-y-2 text-sm">
+
+                        {/* Fragment rows */}
+                        {pricing.fragments.map(({ index, price, surcharges }) => {
+                          const seq = fragments[index].trim();
+                          const totalFragmentPrice = price + surcharges;
+
+                          return (
+                            <React.Fragment key={index}>
+                              <span>Fragment {index + 1}</span>
+                              <span className="text-center">{seq.length} bp</span>
+                              <span className="text-right">
+                                {totalFragmentPrice === 0
+                                  ? `$${pricing.basePrice}`
+                                  : `$${totalFragmentPrice}`}
+                              </span>
+                            </React.Fragment>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
                   <hr className="border-sky-900 my-2" />
 
                   {/* Total */}
@@ -890,6 +1004,28 @@ const OrderPage: React.FC = () => {
                         <span>
                           Total
                         </span>
+                        <span>${pricing.total}</span>
+                      </div>
+                    );
+                  })()}
+                  {selectedOption === 1 && (() => {
+                    const pricing = computeMutagenesisPrice();
+                    if (!pricing) return null;
+
+                    return (
+                      <div className="flex justify-between font-semibold mt-2">
+                        <span>Total</span>
+                        <span>${pricing.total}</span>
+                      </div>
+                    );
+                  })()}
+                  {selectedOption === 2 && (() => {
+                    const pricing = computeOwnBackbonePrice`();
+                    if (!pricing) return null;
+
+                    return (
+                      <div className="flex justify-between font-semibold mt-2">
+                        <span>Total</span>
                         <span>${pricing.total}</span>
                       </div>
                     );
