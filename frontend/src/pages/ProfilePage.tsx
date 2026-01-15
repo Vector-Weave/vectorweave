@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { getUser, logout } from "../lib/auth";
+import { getUser } from "../lib/auth";
+import Sidebar from "../components/Sidebar";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -31,14 +30,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -47,125 +38,78 @@ export default function ProfilePage() {
     );
   }
 
+  const getUserName = () => {
+    if (user?.user_metadata?.first_name) {
+      return user.user_metadata.last_name 
+        ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
+        : user.user_metadata.first_name;
+    }
+    return user?.email?.split('@')[0] || 'User';
+  };
+
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto space-y-6">
-          {/* Header Section */}
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold">Profile Dashboard</h1>
-              <p className="text-muted-foreground mt-1">
-                Welcome back, {user?.email}
-              </p>
-            </div>
-            <Button variant="outline" onClick={handleLogout}>
-              Logout
-            </Button>
+    <div className="min-h-screen flex bg-gray-50">
+      <Sidebar />
+      
+      <main className="flex-1 p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-1">Welcome back, {getUserName()}</p>
           </div>
 
-          {/* Dashboard Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Account Info Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Information</CardTitle>
-                <CardDescription>Your account details</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Email</p>
-                  <p className="text-sm">{user?.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">User ID</p>
-                  <p className="text-sm font-mono text-xs">{user?.id}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Created</p>
-                  <p className="text-sm">
-                    {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="space-y-6">
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card className="border border-gray-200">
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-1">Total Orders</p>
+                    <p className="text-3xl font-bold text-gray-900">0</p>
+                  </CardContent>
+                </Card>
+                <Card className="border border-gray-200">
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-1">Pending</p>
+                    <p className="text-3xl font-bold text-gray-900">0</p>
+                  </CardContent>
+                </Card>
+                <Card className="border border-gray-200">
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-1">Completed</p>
+                    <p className="text-3xl font-bold text-gray-900">0</p>
+                  </CardContent>
+                </Card>
+                <Card className="border border-gray-200">
+                  <CardContent className="p-6">
+                    <p className="text-sm text-gray-600 mb-1">Total Spent</p>
+                    <p className="text-3xl font-bold text-gray-900">$0</p>
+                  </CardContent>
+                </Card>
+              </div>
 
-            {/* Orders Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Orders</CardTitle>
-                <CardDescription>Your order history</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">No orders yet</p>
-                <Button className="mt-4 w-full" onClick={() => navigate("/order")}>
+              {/* Recent Activity */}
+              <Card className="border border-gray-200">
+                <CardHeader>
+                  <CardTitle className="text-gray-900">Recent Activity</CardTitle>
+                  <CardDescription className="text-gray-600">Your recent orders and updates</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500">No recent activity</p>
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <div className="flex gap-4">
+                <Button onClick={() => navigate("/order")} className="bg-gray-900 hover:bg-gray-800 text-white">
                   Create New Order
                 </Button>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Common tasks</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Button className="w-full" variant="outline" onClick={() => navigate("/order")}>
-                  New Order
+                <Button onClick={() => navigate("/orders")} variant="outline" className="border-gray-300 text-gray-700">
+                  View All Orders
                 </Button>
-                <Button className="w-full" variant="outline" onClick={() => navigate("/about")}>
-                  About Us
-                </Button>
-                <Button className="w-full" variant="outline" onClick={() => navigate("/")}>
-                  Home
-                </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
-
-          {/* Stats Section */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Total Orders</CardDescription>
-                <CardTitle className="text-3xl">0</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Pending</CardDescription>
-                <CardTitle className="text-3xl">0</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Completed</CardDescription>
-                <CardTitle className="text-3xl">0</CardTitle>
-              </CardHeader>
-            </Card>
-            <Card>
-              <CardHeader className="pb-3">
-                <CardDescription>Total Spent</CardDescription>
-                <CardTitle className="text-3xl">$0</CardTitle>
-              </CardHeader>
-            </Card>
-          </div>
-
-          {/* Activity Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your recent actions and updates</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">No recent activity</p>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
-      <Footer />
-    </div>
-  );
-}
+        </main>
+      </div>
+    );
+  }

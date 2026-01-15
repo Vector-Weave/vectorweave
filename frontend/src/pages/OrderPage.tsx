@@ -1,5 +1,6 @@
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import Sidebar from "../components/Sidebar";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react";
@@ -482,11 +483,14 @@ const OrderPage: React.FC = () => {
   }, [loggedIn]);
 
   return (
-    <div className="min-h-screen flex flex-col">  {/* className to push footer to bottom of page */}
-      <Header />
-      <main className="flex-1 container mx-auto px-4 py-12" aria-label="Main">
-        <h1 className="text-5xl font-extrabold mb-4">Get Started</h1>
-        <hr className="my-6 border-gray-300" />
+    <div className="min-h-screen flex bg-gray-50">
+      {loggedIn && <Sidebar />}
+      
+      <div className="flex-1 flex flex-col">
+        {!loggedIn && <Header />}
+        <main className="flex-1 container mx-auto px-4 py-12" aria-label="Main">
+          <h1 className="text-5xl font-extrabold mb-4">Get Started</h1>
+          <hr className="my-6 border-gray-300" />
 
 
 
@@ -1072,13 +1076,9 @@ const OrderPage: React.FC = () => {
             </div>
           </div>
         </div>
-
-
-
-
-
       </main>
-      <Footer />
+      {!loggedIn && <Footer />}
+    </div>
     </div>
   );
 };
