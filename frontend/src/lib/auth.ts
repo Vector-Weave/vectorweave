@@ -18,7 +18,6 @@ export const getUser = async () => {
 
 export const logout = async () => {
   await supabase.auth.signOut();
-  window.location.href = "/auth";
 };
 
 export const getAuthHeader = async () => {

@@ -6,6 +6,8 @@ import { Trash2 } from "lucide-react";
 import { MULTI_INSERT_PRCIING, MULTI_MUTAGENESIS_PRICING, OWN_BACKBONE_PRICING } from "@/config/pricing";
 import React, { useState, useEffect } from "react";
 import CanvasJSReact from "@canvasjs/react-charts";
+import { useNavigate } from "react-router-dom";
+import { isAuthenticated } from "@/lib/auth";
 
 import {
   Select,
@@ -77,11 +79,19 @@ const OrderPage: React.FC = () => {
   const [fragmentErrors, setFragmentErrors] = useState<string[]>([]);
   const [submissionError, setSubmissionError] = useState("");
   const [dnaTypes, setDnaTypes] = useState<string[]>(Array(buildConfigs[0].fragments).fill(""));
-  const [showLoginCard, setShowLoginCard] = useState(false);
   const [selectedBackbone, setSelectedBackbone] = useState<string | null>(null);
   const [backboneSelectedError, setBackboneSelectedError] = useState("");
-  //dummy variable for now - will change when connected to backend
   const [loggedIn, setLoggedIn] = useState(false);
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const checkAuth = async () => {
+      const authenticated = await isAuthenticated();
+      setLoggedIn(authenticated);
+    };
+    checkAuth();
+  }, []);
+  
   const config = selectedOption !== null ? buildConfigs[selectedOption] : null;
   const backbonePercentageMap: Record<number, number> = {
     1: 77,
@@ -599,7 +609,7 @@ const OrderPage: React.FC = () => {
                           <p className="text-sm text-sky-800">
                             <button
                               type="button"
-                              onClick={() => setShowLoginCard(true)}
+                              onClick={() => navigate("/auth")}
                               className="font-semibold underline hover:text-sky-600"
                             >
                               Log in
@@ -1065,42 +1075,7 @@ const OrderPage: React.FC = () => {
 
 
 
-        {showLoginCard && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle className="text-2xl text-center">
-                  Welcome to VectorWeave
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {/* Sign In Form */}
-                <form
-                  className="space-y-4"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    setLoggedIn(true);
-                    setShowLoginCard(false);
-                  }}
-                >
-                  <div className="space-y-2">
-                    <Label>Email</Label>
-                    <Input type="email" required />
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label>Password</Label>
-                    <Input type="password" required />
-                  </div>
-
-                  <Button type="submit" className="w-full">
-                    Sign In
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
       </main>
       <Footer />
