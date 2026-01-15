@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react";
 import { MULTI_INSERT_PRCIING, MULTI_MUTAGENESIS_PRICING, OWN_BACKBONE_PRICING } from "@/config/pricing";
-import React, { useState, useEffect, Component } from "react";
+import React, { useState, useEffect } from "react";
 import CanvasJSReact from "@canvasjs/react-charts";
 
 import {
@@ -105,7 +105,7 @@ const OrderPage: React.FC = () => {
   }
   const [backbones, setBackbones] = useState<Backbone[]>([]);
 
-  const computeChartOptions = () => {
+  const computeChartMultiInsert = () => {
     const dnaRegex = /^[ACGTacgt]+$/;
     const nonEmptyFragments = fragments
       .map(f => f.trim())
@@ -482,14 +482,14 @@ const OrderPage: React.FC = () => {
 
         <div className="flex flex-col items-center gap-2">
           {/* First blue box with 4 squares */}
-          <div className="w-full h-60 bg-sky-200 rounded-[20px] flex flex-col px-8 py-4">
+          <div className="w-full  bg-sky-200 rounded-[20px] flex flex-col px-8 py-4">
             {/* Text at top-left */}
             <p className="text-lg font-medium text-sky-900 mb-2">
               1. Choose your plasmid option:
             </p>
 
             {/* Inner squares container */}
-            <div className="flex justify-between w-full px-80 ">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-16 max-w-3xl mx-auto justify-items-center">
               {[
                 "Multi-insert",
                 "Mutagenesis",
@@ -882,7 +882,7 @@ const OrderPage: React.FC = () => {
                     <div className="mt-2 w-80 h-80 bg-sky-300 py-2 px-2 rounded-[30px] overflow-hidden flex flex-col">
                       <div className="flex items-center bg-sky-300 justify-center flex-1 min-h-0">
                         {(() => {
-                          const dynamicOptions = computeChartOptions();
+                          const dynamicOptions = computeChartMultiInsert();
                           if (!dynamicOptions) {
                             return;
                           }
