@@ -1,13 +1,18 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase";
 
 const AuthPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,22 +26,84 @@ const AuthPage: React.FC = () => {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    setError(""); // Clear error when user types
   };
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement sign in logic
-    console.log("Sign in:", { email: formData.email, password: formData.password });
+    setLoading(true);
+    setError("");
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        // Supabase automatically stores the session
+        // Redirect to profile page
+        navigate("/profile");
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement sign up logic
+    setLoading(true);
+    setError("");
+
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords don't match!");
+      setError("Passwords don't match!");
+      setLoading(false);
       return;
     }
-    console.log("Sign up:", formData);
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+          }
+        }
+      });
+
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        // Check if email confirmation is required
+        if (data.user.identities && data.user.identities.length === 0) {
+          setError("Please check your email to confirm your account.");
+          setLoading(false);
+        } else {
+          // Redirect to profile page
+          navigate("/profile");
+        }
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+      console.error("Registration error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,19 +120,34 @@ const AuthPage: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {error}
+              </div>
+            )}
+
             {/* Tabs */}
             <div className="flex gap-2 mb-6">
               <Button
                 variant={activeTab === "signin" ? "default" : "outline"}
                 className="flex-1"
-                onClick={() => setActiveTab("signin")}
+                onClick={() => {
+                  setActiveTab("signin");
+                  setError("");
+                }}
+                disabled={loading}
               >
                 Sign In
               </Button>
               <Button
                 variant={activeTab === "signup" ? "default" : "outline"}
                 className="flex-1"
-                onClick={() => setActiveTab("signup")}
+                onClick={() => {
+                  setActiveTab("signup");
+                  setError("");
+                }}
+                disabled={loading}
               >
                 Sign Up
               </Button>
@@ -107,8 +189,8 @@ const AuthPage: React.FC = () => {
                     Forgot password?
                   </a>
                 </div>
-                <Button type="submit" className="w-full">
-                  Sign In
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
             )}
@@ -184,8 +266,8 @@ const AuthPage: React.FC = () => {
                     I agree to the Terms of Service and Privacy Policy
                   </span>
                 </div>
-                <Button type="submit" className="w-full">
-                  Create Account
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>
             )}
