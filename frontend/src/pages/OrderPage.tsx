@@ -9,6 +9,7 @@ import React, { useState, useEffect } from "react";
 import CanvasJSReact from "@canvasjs/react-charts";
 import { useNavigate } from "react-router-dom";
 import { isAuthenticated } from "@/lib/auth";
+import { orderService } from "@/services/orderService";
 
 import {
   Select,
@@ -500,18 +501,23 @@ const OrderPage: React.FC = () => {
   }
 
   useEffect(() => {
-
-    if (loggedIn) {
-      setBackbones([
-        { name: "puc", sequence: "ACGTACGTACGTACGT" },
-        { name: "pcdna", sequence: "ACGTACGTAAAAACCCCCGGGGGTTTTT" }
-      ]);
-    }
-    else {
-      setBackbones([]);
-      setSelectedBackbone(null);
-    }
-
+    const loadBackbones = async() => {
+      if (loggedIn) {
+        try{
+          //call api to get backbones
+          const backbonesData = await orderService.getUserBackbones();
+          setBackbones(backbonesData);
+        }
+        catch(error){
+          console.error('Failed to load backbones:', error);
+        }
+      }
+      else{
+        setBackbones([]);
+        setSelectedBackbone(null);
+      }
+    };
+    loadBackbones();
   }, [loggedIn]);
 
   return (
