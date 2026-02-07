@@ -164,6 +164,36 @@ const OrderPage: React.FC = () => {
 
   };
 
+  const computeChartNewBackbones = () => {
+    const validFragments = fragments.map(f => f.trim()).filter(f => f !== "" && isValidDNA(f));
+    if (validFragments.length === 0) return null;
+
+    const totalLength = validFragments.reduce((sum, frag) => sum + frag.length, 0);
+
+    const dataPoints = validFragments.map((frag, i) => ({
+      y: (frag.length / totalLength) * 100,
+      toolTipContent: `Fragment ${i + 1}: ${frag.length} bp (${(
+        (frag.length / totalLength) *
+        100
+      ).toFixed(1)}%)`,
+    }));
+
+    return {
+      animationEnabled: true,
+      theme: "dark3",
+      backgroundColor: "#7dd3fc",
+      data: [
+        {
+          type: "doughnut",
+          showInLegend: false,
+          indexLabel: "",
+          yValueFormatString: "#,##0.0'%'",
+          dataPoints,
+        },
+      ],
+    };
+  };
+
   const isValidDNA = (seq: string) => /^[ACGTacgt]+$/.test(seq);
 
   const computeGCPercent = (seq: string) => {
@@ -222,6 +252,8 @@ const OrderPage: React.FC = () => {
   };
 
   const computeMutagenesisPrice = () => {
+    if (!selectedBackbone) return null;
+
     const validMutations = mutations
       .map((m, i) => ({ value: m.trim(), index: i }))
       // Only keep non-empty mutations that match the format
@@ -882,11 +914,18 @@ const OrderPage: React.FC = () => {
                     <div className="mt-2 w-80 h-80 bg-sky-300 py-2 px-2 rounded-[30px] overflow-hidden flex flex-col">
                       <div className="flex items-center bg-sky-300 justify-center flex-1 min-h-0">
                         {(() => {
-                          const dynamicOptions = computeChartMultiInsert();
-                          if (!dynamicOptions) {
+                          let chartOptions = null;
+
+                          if(selectedOption === 0){
+                            chartOptions = computeChartMultiInsert();
+                          }
+                          else if(selectedOption === 2){
+                            chartOptions = computeChartNewBackbones();
+                          }
+                          if (!chartOptions) {
                             return;
                           }
-                          return <CanvasJSChart options={dynamicOptions} />;
+                          return <CanvasJSChart options={chartOptions} />;
                         })()}
                       </div>
                     </div>
