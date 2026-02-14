@@ -24,6 +24,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/test/**").permitAll() // Allow test endpoints
                 .requestMatchers("/api/customers/**").permitAll() // Allow customer endpoints
+                .requestMatchers("/api/managers/**").permitAll() // Allow manager endpoints
                 .anyRequest().permitAll() // Allow all for now - auth handled by Supabase
             )
             .sessionManagement(session -> session
