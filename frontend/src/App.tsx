@@ -8,6 +8,7 @@ import OrdersListPage from "./pages/OrdersListPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
 import AccountPage from "./pages/AccountPage";
+import ServicesPage from "./pages/ServicesPage";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="*" element={<div>404</div>} />
+          <Route path="services" element={<ServicesPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
