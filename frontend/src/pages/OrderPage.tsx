@@ -71,7 +71,9 @@ const OrderPage: React.FC = () => {
   const [dnaTypes, setDnaTypes] = useState<string[]>(Array(buildConfigs[0].fragments).fill(""));
   const [selectedBackbone, setSelectedBackbone] = useState<string | null>(null);
   const [backboneSelectedError, setBackboneSelectedError] = useState("");
+  const [viewingBackbone, setViewingBackbone] = useState<Backbone | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -192,6 +194,253 @@ const OrderPage: React.FC = () => {
         },
       ],
     };
+  };
+
+  const computeChartMutagenesis = () => {
+    if (!selectedBackbone) return null;
+
+    const backboneLength = getBackboneLength();
+    if (!backboneLength) return null;
+
+    // Get valid mutations in the correct format
+    const validMutations = mutations
+      .map((m, i) => ({ value: m.trim(), index: i }))
+      .filter(m => m.value !== "" && mutationFormat.test(m.value))
+      .map(m => {
+        const match = m.value.match(/^([ACGTacgt])(\d+)([ACGTacgt])$/);
+        return {
+          position: parseInt(match![2], 10),
+          label: m.value.toUpperCase(),
+          originalIndex: m.index
+        };
+      })
+      .sort((a, b) => a.position - b.position);
+
+    if (validMutations.length === 0) {
+      // Show entire backbone if no valid mutations
+      return {
+        animationEnabled: true,
+        theme: "dark3",
+        backgroundColor: "#7dd3fc",
+        data: [
+          {
+            type: "doughnut",
+            showInLegend: false,
+            indexLabel: "",
+            dataPoints: [
+              {
+                y: 100,
+                color: "#0ea5e9", // Sky blue for backbone
+                toolTipContent: `Backbone: ${backboneLength} bp`,
+              },
+            ],
+          },
+        ],
+      };
+    }
+
+    // Create segments: backbone sections and mutation points
+    const dataPoints: any[] = [];
+    const mutationWidth = 1; // Percentage width for each mutation marker
+
+    let currentPosition = 0;
+
+    validMutations.forEach((mut, idx) => {
+      // Calculate the percentage of backbone before this mutation
+      const segmentLength = mut.position - currentPosition;
+      const segmentPercent = (segmentLength / backboneLength) * 100;
+
+      // Add backbone segment before mutation (if there's space)
+      if (segmentPercent > mutationWidth) {
+        dataPoints.push({
+          y: segmentPercent - mutationWidth / 2,
+          color: "#0ea5e9", // Sky blue for backbone
+          toolTipContent: `Backbone: ${segmentLength} bp`,
+        });
+      }
+
+      // Add mutation marker
+      dataPoints.push({
+        y: mutationWidth,
+        color: getMutationColor(idx),
+        toolTipContent: `Mutation ${mut.originalIndex + 1}: ${mut.label} (position ${mut.position})`,
+      });
+
+      currentPosition = mut.position;
+    });
+    // Add final backbone segment
+    const finalSegmentLength = backboneLength - currentPosition;
+    const finalSegmentPercent = (finalSegmentLength / backboneLength) * 100;
+
+    if (finalSegmentPercent > 0) {
+      dataPoints.push({
+        y: finalSegmentPercent,
+        color: "#0ea5e9", // Sky blue for backbone
+        toolTipContent: `Backbone: ${finalSegmentLength} bp`,
+      });
+    }
+
+    return {
+      animationEnabled: true,
+      theme: "dark3",
+      backgroundColor: "#7dd3fc",
+      data: [
+        {
+          type: "doughnut",
+          showInLegend: false,
+          indexLabel: "",
+          startAngle: -90, // Start from top
+          dataPoints,
+        },
+      ],
+    };
+  };
+
+  // Helper function to get distinct colors for mutations
+  const getMutationColor = (index: number): string => {
+    const colors = [
+      "#ef4444", // Red
+      "#f59e0b", // Amber
+      "#10b981", // Emerald
+      "#8b5cf6", // Violet
+    ];
+    return colors[index % colors.length];
+  };
+
+  const computeChartSkeleton = () => {
+    return {
+      animationEnabled: true,
+      theme: "dark3",
+      backgroundColor: "#7dd3fc",
+      data: [
+        {
+          type: "doughnut",
+          showInLegend: false,
+          indexLabel: "",
+          dataPoints: [
+            {
+              y: 100,
+              color: "#a6a6a6", // Gray color for skeleton
+              toolTipContent: "Enter data to visualize plasmid",
+            },
+          ],
+        },
+      ],
+    };
+  };
+
+  ///////////////////// Plasmid Sequence display ///////////////////////////
+  type PlasmidPart = {
+    label: string;
+    sequence: string;
+    color: string;
+  };
+
+  type PlasmidPartWithMutations = PlasmidPart & {
+    mutations: {
+      position: number;
+      toBase: string;
+      label: string;
+      originalIndex: number;
+    }[];
+  };
+
+  type PlasmidSequenceResult = (PlasmidPart | PlasmidPartWithMutations)[];
+
+  const getBackboneSequence = (): string => {
+    const bb = backbones.find(b => b.name === selectedBackbone);
+    if (!bb) return "";
+    return bb.sequence;
+  };
+
+  const buildPlasmidSequence = (): PlasmidSequenceResult | null => {
+    if (selectedOption === 0) {
+      if (!selectedBackbone) return null;
+      const validFragments = fragments
+        .map((f, i) => ({ seq: f.trim(), index: i }))
+        .filter(f => f.seq !== "" && isValidDNA(f.seq));
+
+      if (validFragments.length === 0) return null;
+
+      const backboneSeq = getBackboneSequence();
+      const parts: PlasmidPart[] = [
+        { label: "Backbone", sequence: backboneSeq, color: "#0ea5e9" }
+      ];
+
+      validFragments.forEach((frag, idx) => {
+        parts.push({
+          label: `Fragment ${frag.index + 1}`,
+          sequence: frag.seq,
+          color: getFragmentColor(idx)
+        });
+      });
+
+      return parts;
+    }
+    else if (selectedOption === 1) {
+      // Mutagenesis: backbone with mutations applied
+      if (!selectedBackbone) return null;
+
+      const backboneSeq = getBackboneSequence();
+      if (!backboneSeq) return null;
+
+      const validMutations = mutations
+        .map((m, i) => ({ value: m.trim(), index: i }))
+        .filter(m => m.value !== "" && mutationFormat.test(m.value))
+        .map(m => {
+          const match = m.value.match(/^([ACGTacgt])(\d+)([ACGTacgt])$/);
+          return {
+            position: parseInt(match![2], 10) - 1, // Convert to 0-indexed
+            toBase: match![3].toUpperCase(),
+            label: m.value.toUpperCase(),
+            originalIndex: m.index
+          };
+        });
+
+      // Apply mutations to backbone sequence
+      let mutatedSeq = backboneSeq.split('');
+      validMutations.forEach(mut => {
+        if (mut.position >= 0 && mut.position < mutatedSeq.length) {
+          mutatedSeq[mut.position] = mut.toBase;
+        }
+      });
+
+      const result: PlasmidPartWithMutations[] = [{
+        label: "Backbone (with mutations)",
+        sequence: mutatedSeq.join(''),
+        mutations: validMutations,
+        color: "#0ea5e9"
+      }];
+
+      return result;
+    }
+    else if (selectedOption === 2) {
+      // Build your own backbone: frag1 -> frag2 -> ...
+      const validFragments = fragments
+        .map((f, i) => ({ seq: f.trim(), index: i }))
+        .filter(f => f.seq !== "" && isValidDNA(f.seq));
+
+      if (validFragments.length === 0) return null;
+
+      return validFragments.map((frag, idx) => ({
+        label: `Fragment ${frag.index + 1}`,
+        sequence: frag.seq,
+        color: getFragmentColor(idx)
+      }));
+    }
+    return null;
+  };
+
+  // Helper function to get distinct colors for fragments
+  const getFragmentColor = (index: number): string => {
+    const colors = [
+      "#22c55e", // Green
+      "#3b82f6", // Blue
+      "#a855f7", // Purple
+      "#f59e0b", // Amber
+      "#ec4899", // Pink
+    ];
+    return colors[index % colors.length];
   };
 
   const isValidDNA = (seq: string) => /^[ACGTacgt]+$/.test(seq);
@@ -980,14 +1229,132 @@ const OrderPage: React.FC = () => {
                             else if (selectedOption === 2) {
                               chartOptions = computeChartNewBackbones();
                             }
+                            else if (selectedOption === 1) {
+                              chartOptions = computeChartMutagenesis();
+                            }
                             if (!chartOptions) {
-                              return;
+                              chartOptions = computeChartSkeleton();
                             }
                             return <CanvasJSChart options={chartOptions} />;
                           })()}
                         </div>
                       </div>
                     </div>
+
+                    {/* Plasmid Sequence Display */}
+                    {(() => {
+                      const plasmidParts = buildPlasmidSequence();
+                      if (!plasmidParts) return null;
+
+                      const firstPart = plasmidParts[0];
+                      const hasMutations = 'mutations' in firstPart;
+
+                      return (
+                        <div className="mt-4 mb-2">
+                          <Label className="text-sm font-medium mb-2 block">Plasmid Structure:</Label>
+                          <div className="bg-white rounded-lg p-3 border border-sky-400">
+                            {selectedOption === 1 ? (
+                              // Mutagenesis display - show backbone with mutation highlights
+                              // Mutagenesis display - show backbone with mutation highlights
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-center gap-2 text-xs">
+                                  <span className="font-medium">Backbone:</span>
+                                  <span className="text-gray-600">
+                                    {firstPart.sequence.length} bp
+                                    {hasMutations && (firstPart as PlasmidPartWithMutations).mutations.length > 0 && (
+                                      <span className="ml-2 text-sky-700">
+                                        ({(firstPart as PlasmidPartWithMutations).mutations.length} mutation{(firstPart as PlasmidPartWithMutations).mutations.length > 1 ? 's' : ''})
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                                {hasMutations && (firstPart as PlasmidPartWithMutations).mutations.length > 0 && (
+                                  <div className="flex flex-wrap justify-center gap-2">
+                                    {(firstPart as PlasmidPartWithMutations).mutations.map((mut, idx) => (
+                                      <div
+                                        key={idx}
+                                        className="flex items-center gap-1 px-2 py-1 rounded text-xs"
+                                        style={{ backgroundColor: getMutationColor(idx) + '20', border: `1px solid ${getMutationColor(idx)}` }}
+                                      >
+                                        <div
+                                          className="w-2 h-2 rounded-full"
+                                          style={{ backgroundColor: getMutationColor(idx) }}
+                                        />
+                                        <span className="font-mono font-semibold">{mut.label}</span>
+                                        <span className="text-gray-600">at position {mut.position + 1}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              // Multi-insert and Build your own backbone display
+                              <div className="flex items-center justify-center gap-1 flex-wrap">
+                                {plasmidParts.map((part, idx) => (
+                                  <React.Fragment key={idx}>
+                                    {idx > 0 && (
+                                      <span className="text-gray-400 font-bold mx-1">→</span>
+                                    )}
+                                    <div
+                                      className="flex items-center gap-2 px-3 py-1.5 rounded-md"
+                                      style={{ backgroundColor: part.color + '20', border: `2px solid ${part.color}` }}
+                                    >
+                                      <div
+                                        className="w-3 h-3 rounded-full"
+                                        style={{ backgroundColor: part.color }}
+                                      />
+                                      <div className="flex flex-col">
+                                        <span className="text-xs font-semibold">{part.label}</span>
+                                        <span className="text-xs text-gray-600">{part.sequence.length} bp</span>
+                                      </div>
+                                    </div>
+                                  </React.Fragment>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Entire sequence with a copy icon to copy the sequence */}
+                            <div className="mt-3 pt-2 border-t border-sky-200">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium text-gray-700">Complete Sequence ({plasmidParts.reduce((sum, part) => sum + part.sequence.length, 0)} bp)</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const fullSequence = plasmidParts.map(part => part.sequence).join('');
+                                    navigator.clipboard.writeText(fullSequence);
+                                    // Optional: Add a toast notification here
+                                  }}
+                                  className="flex items-center gap-1 px-2 py-1 text-xs bg-sky-100 hover:bg-sky-200 text-sky-700 rounded transition-colors"
+                                  title="Copy sequence to clipboard"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                  </svg>
+                                  Copy
+                                </button>
+                              </div>
+                              <div className="bg-gray-50 rounded p-2 border border-gray-200 max-h-24 overflow-y-auto">
+                                <code className="text-xs font-mono text-gray-700 break-all">
+                                  {plasmidParts.map(part => part.sequence).join('')}
+                                </code>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
                     {/* Table header */}
                     <div className="grid grid-cols-3 w-full text-sm font-medium mt-2">
                       <span>Name</span>
