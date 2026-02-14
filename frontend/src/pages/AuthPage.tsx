@@ -71,6 +71,7 @@ const AuthPage: React.FC = () => {
     }
 
     try {
+      // Step 1: Create Supabase user
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -83,7 +84,12 @@ const AuthPage: React.FC = () => {
       });
 
       if (error) {
-        setError(error.message);
+        // Handle rate limit errors more gracefully
+        if (error.message.includes("rate limit") || error.message.includes("Email rate limit exceeded")) {
+          setError("Too many signup attempts. Please wait a few minutes before trying again, or disable email confirmation in your Supabase dashboard for development.");
+        } else {
+          setError(error.message);
+        }
         setLoading(false);
         return;
       }
@@ -93,9 +99,41 @@ const AuthPage: React.FC = () => {
         if (data.user.identities && data.user.identities.length === 0) {
           setError("Please check your email to confirm your account.");
           setLoading(false);
-        } else {
+          return;
+        }
+
+        // Step 2: Create Customer in backend and associate with Supabase user
+        try {
+          const backendResponse = await fetch("http://localhost:8080/api/customers", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              supabaseUserId: data.user.id,
+              email: formData.email,
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+            }),
+          });
+
+          const customerData = await backendResponse.json();
+
+          if (!backendResponse.ok) {
+            console.error("Failed to create customer in backend:", customerData.message);
+            setError(`Account created but failed to complete setup: ${customerData.message || 'Backend error'}. Please ensure the backend server is running.`);
+            setLoading(false);
+            return;
+          }
+
+          console.log("Customer created successfully:", customerData);
           // Redirect to profile page
           navigate("/profile");
+        } catch (backendError) {
+          console.error("Backend error:", backendError);
+          const errorMsg = backendError instanceof Error ? backendError.message : 'Unknown error';
+          setError(`Account created but backend is not responding: ${errorMsg}. Please ensure the backend server is running at http://localhost:8080`);
+          setLoading(false);
         }
       }
     } catch (err) {
