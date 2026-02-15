@@ -11,4 +11,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  preview: {
+    allowedHosts: [
+      ".railway.app",
+      ".up.railway.app",
+      "vectorweave-production.up.railway.app"
+    ]
+  }
 })
