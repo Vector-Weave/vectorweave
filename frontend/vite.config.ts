@@ -17,5 +17,10 @@ export default defineConfig({
       ".up.railway.app",
       "vectorweave-production.up.railway.app"
     ]
+  },
+  build: {
+    rollupOptions: {
+      external: []
+    }
   }
 })
