@@ -1,7 +1,7 @@
 // Customer utility functions for backend API
 import { getUser } from "./auth";
 
-const BACKEND_URL = "http://localhost:8080";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8080";
 
 /**
  * Creates a new customer record linked to a Supabase user

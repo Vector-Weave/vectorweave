@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "vite preview --host --port $PORT"
   },
   "dependencies": {
     "@canvasjs/react-charts": "^1.0.2",
