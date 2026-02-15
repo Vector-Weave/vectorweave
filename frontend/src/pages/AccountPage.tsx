@@ -38,14 +38,15 @@ export default function AccountPage() {
     );
   }
 
-  const getUserName = () => {
-    if (user?.user_metadata?.first_name) {
-      return user.user_metadata.last_name 
-        ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
-        : user.user_metadata.first_name;
-    }
-    return user?.email?.split('@')[0] || 'User';
-  };
+  // Unused function - can be used later if needed
+  // const getUserName = () => {
+  //   if (user?.user_metadata?.first_name) {
+  //     return user.user_metadata.last_name 
+  //       ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
+  //       : user.user_metadata.first_name;
+  //   }
+  //   return user?.email?.split('@')[0] || 'User';
+  // };
 
   return (
     <div className="min-h-screen flex bg-gray-50">

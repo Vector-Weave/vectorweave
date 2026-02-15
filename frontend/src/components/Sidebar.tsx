@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Package, User as UserIcon, Settings, LogOut, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, User as UserIcon, LogOut, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
 import { logout } from "../lib/auth";
 import { useState } from "react";
 

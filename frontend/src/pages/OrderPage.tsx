@@ -71,7 +71,7 @@ const OrderPage: React.FC = () => {
   const [dnaTypes, setDnaTypes] = useState<string[]>(Array(buildConfigs[0].fragments).fill(""));
   const [selectedBackbone, setSelectedBackbone] = useState<string | null>(null);
   const [backboneSelectedError, setBackboneSelectedError] = useState("");
-  const [viewingBackbone, setViewingBackbone] = useState<Backbone | null>(null);
+  // const [viewingBackbone, setViewingBackbone] = useState<Backbone | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   
   const navigate = useNavigate();

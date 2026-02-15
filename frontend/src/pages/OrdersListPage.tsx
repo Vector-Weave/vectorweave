@@ -15,7 +15,7 @@ interface Order {
 }
 
 export default function OrdersListPage() {
-  const [user, setUser] = useState<any>(null);
+  const [, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const navigate = useNavigate();
