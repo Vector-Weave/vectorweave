@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react";
 import { MULTI_INSERT_PRCIING, MULTI_MUTAGENESIS_PRICING, OWN_BACKBONE_PRICING } from "@/config/pricing";
 import React, { useState, useEffect } from "react";
-// import CanvasJSReact from "@canvasjs/react-charts"; // Removed - causes CommonJS require error
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useNavigate } from "react-router-dom";
 import { isAuthenticated } from "@/lib/auth";
 import { orderService } from "@/services/orderService";
@@ -54,8 +54,6 @@ const buildConfigs = {
   },
 } as const;
 
-
-// const { CanvasJSChart } = CanvasJSReact; // Removed - causes CommonJS require error
 
 const OrderPage: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<0 | 1 | 2 | null>(0);
@@ -1235,8 +1233,37 @@ const OrderPage: React.FC = () => {
                             if (!chartOptions) {
                               chartOptions = computeChartSkeleton();
                             }
-                            // return <CanvasJSChart options={chartOptions} />; // Removed - causes CommonJS require error
-                            return <div className="p-4 text-center text-gray-500">Chart temporarily disabled</div>;
+                            
+                            // Convert CanvasJS format to Recharts format
+                            const chartData = chartOptions?.data?.[0]?.dataPoints?.map((dp: any, idx: number) => ({
+                              name: dp.toolTipContent || `Segment ${idx + 1}`,
+                              value: dp.y,
+                              color: dp.color || undefined
+                            })) || [];
+                            
+                            // Default colors if not specified
+                            const COLORS = ['#0ea5e9', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899'];
+                            
+                            return (
+                              <ResponsiveContainer width="100%" height={300}>
+                                <PieChart>
+                                  <Pie
+                                    data={chartData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={100}
+                                    paddingAngle={2}
+                                    dataKey="value"
+                                  >
+                                    {chartData.map((entry: any, index: number) => (
+                                      <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                                    ))}
+                                  </Pie>
+                                  <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+                                </PieChart>
+                              </ResponsiveContainer>
+                            );
                           })()}
                         </div>
                       </div>
