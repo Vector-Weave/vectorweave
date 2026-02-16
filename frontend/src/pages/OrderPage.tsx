@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Trash2 } from "lucide-react";
 import { MULTI_INSERT_PRCIING, MULTI_MUTAGENESIS_PRICING, OWN_BACKBONE_PRICING } from "@/config/pricing";
 import React, { useState, useEffect } from "react";
-import CanvasJSReact from "@canvasjs/react-charts";
+// import CanvasJSReact from "@canvasjs/react-charts"; // Removed - causes CommonJS require error
 import { useNavigate } from "react-router-dom";
 import { isAuthenticated } from "@/lib/auth";
 import { orderService } from "@/services/orderService";
@@ -55,7 +55,7 @@ const buildConfigs = {
 } as const;
 
 
-const { CanvasJSChart } = CanvasJSReact;
+// const { CanvasJSChart } = CanvasJSReact; // Removed - causes CommonJS require error
 
 const OrderPage: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<0 | 1 | 2 | null>(0);
@@ -1235,7 +1235,8 @@ const OrderPage: React.FC = () => {
                             if (!chartOptions) {
                               chartOptions = computeChartSkeleton();
                             }
-                            return <CanvasJSChart options={chartOptions} />;
+                            // return <CanvasJSChart options={chartOptions} />; // Removed - causes CommonJS require error
+                            return <div className="p-4 text-center text-gray-500">Chart temporarily disabled</div>;
                           })()}
                         </div>
                       </div>
