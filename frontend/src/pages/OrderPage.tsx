@@ -1260,7 +1260,7 @@ const OrderPage: React.FC = () => {
                                       <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
                                     ))}
                                   </Pie>
-                                  <Tooltip formatter={(value) => value ? `${value.toFixed(1)}%` : '0%'} />
+                                  <Tooltip formatter={(value) => typeof value === 'number' ? `${value.toFixed(1)}%` : '0%'} />
                                 </PieChart>
                               </ResponsiveContainer>
                             );
