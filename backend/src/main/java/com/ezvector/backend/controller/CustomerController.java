@@ -41,4 +41,14 @@ public class CustomerController {
     public ResponseEntity<String> test() {
         return ResponseEntity.ok("Customer endpoint is working!");
     }
+
+    @GetMapping("/backbones/{supabaseUserId}")
+    public ResponseEntity<?> getUserBackbones(@PathVariable String supabaseUserId) {
+        try {
+            var backbones = customerService.getUserBackbones(supabaseUserId);
+            return ResponseEntity.ok(backbones);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to fetch backbones: " + e.getMessage());
+        }
+    }
 }

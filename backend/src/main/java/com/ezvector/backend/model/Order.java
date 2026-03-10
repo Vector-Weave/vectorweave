@@ -60,6 +60,7 @@ public class Order {
     }
 
     public Order() {
+        orderItems = new ArrayList<OrderItem>();
     }
 
     //------------------------

@@ -8,7 +8,7 @@ import { MULTI_INSERT_PRCIING, MULTI_MUTAGENESIS_PRICING, OWN_BACKBONE_PRICING }
 import React, { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useNavigate } from "react-router-dom";
-import { isAuthenticated } from "@/lib/auth";
+import { isAuthenticated, getUser } from "@/lib/auth";
 import { orderService } from "@/services/orderService";
 
 import {
@@ -71,6 +71,9 @@ const OrderPage: React.FC = () => {
   const [backboneSelectedError, setBackboneSelectedError] = useState("");
   // const [viewingBackbone, setViewingBackbone] = useState<Backbone | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [orderError, setOrderError] = useState("");
   
   const navigate = useNavigate();
 
@@ -724,6 +727,90 @@ const OrderPage: React.FC = () => {
     return true;
   }
 
+  const submitOrder = async () => {
+    if (!handleSubmit()) {
+      return;
+    }
+
+    if (!loggedIn) {
+      setOrderError("You must be logged in to place an order");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setOrderError("");
+    setOrderSuccess(false);
+
+    try {
+      // Get current user
+      const user = await getUser();
+      if (!user) {
+        setOrderError("Unable to get user information");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Determine build type
+      let buildType: 'MULTI_INSERT' | 'MUTAGENESIS' | 'NEW_BACKBONE' = 'MULTI_INSERT';
+      if (selectedOption === 1) buildType = 'MUTAGENESIS';
+      else if (selectedOption === 2) buildType = 'NEW_BACKBONE';
+
+      // Calculate total price
+      let totalPrice = 0;
+      if (selectedOption === 0) {
+        const pricing = computeMultiInsertPrice();
+        totalPrice = pricing?.total || 0;
+      } else if (selectedOption === 1) {
+        const pricing = computeMutagenesisPrice();
+        totalPrice = pricing?.total || 0;
+      } else if (selectedOption === 2) {
+        const pricing = computeOwnBackbonePrice();
+        totalPrice = pricing?.total || 0;
+      }
+
+      // Prepare fragments data
+      const fragmentsData = fragments
+        .map((seq, idx) => ({
+          sequence: seq.trim(),
+          dnaType: dnaTypes[idx] || 'SYNTHETIC'
+        }))
+        .filter(f => f.sequence !== "");
+
+      // Prepare mutations data
+      const mutationsData = mutations
+        .map(m => m.trim())
+        .filter(m => m !== "" && mutationFormat.test(m));
+
+      // Create order request
+      const orderData = {
+        supabaseUserId: user.id,
+        plasmidName: plasmidName,
+        buildType: buildType,
+        backboneName: selectedBackbone,
+        fragments: fragmentsData,
+        mutations: mutationsData,
+        totalPrice: totalPrice
+      };
+
+      const response = await orderService.createOrder(orderData);
+
+      if (response.orderId) {
+        setOrderSuccess(true);
+        // Optionally navigate to orders page or show success message
+        setTimeout(() => {
+          navigate('/orders');
+        }, 2000);
+      } else {
+        setOrderError(response.message || "Failed to create order");
+      }
+
+    } catch (error: any) {
+      setOrderError(error.response?.data?.message || error.message || "Failed to create order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   const getBackboneSize = (): string => {
     const bb = backbones.find(b => b.name === selectedBackbone);
     if (!bb) return "";
@@ -739,9 +826,11 @@ const OrderPage: React.FC = () => {
     const loadBackbones = async () => {
       if (loggedIn) {
         try {
-          //call api to get backbones
-          const backbonesData = await orderService.getUserBackbones();
-          setBackbones(backbonesData);
+          const user = await getUser();
+          if (user) {
+            const backbonesData = await orderService.getUserBackbones(user.id);
+            setBackbones(backbonesData);
+          }
         }
         catch (error) {
           console.error('Failed to load backbones:', error);
@@ -1524,29 +1613,41 @@ const OrderPage: React.FC = () => {
                     })()}
                   </div>
 
+                  {/* Success/Error Messages */}
+                  {orderSuccess && (
+                    <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4">
+                      ✅ Order placed successfully! Redirecting to orders page...
+                    </div>
+                  )}
+                  {orderError && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mt-4">
+                      ❌ {orderError}
+                    </div>
+                  )}
+
                   {/* Buttons below the box */}
                   <div className="flex gap-4 justify-end mt-1">
                     <Button
-                      onClick={() => {
-                        if (!handleSubmit())
-                          return;
-                        console.log("Added to cart.");
-                      }}
-                      className="bg-sky-500 hover:bg-sky-600 text-white"
+                      onClick={submitOrder}
+                      disabled={isSubmitting || !loggedIn}
+                      className="bg-sky-500 hover:bg-sky-600 text-white disabled:opacity-50"
                     >
-                      Add to Cart
+                      {isSubmitting ? 'Submitting...' : 'Add to Cart'}
                     </Button>
                     <Button
-                      onClick={() => {
-                        if (!handleSubmit())
-                          return;
-                        console.log("Added to cart.");
-                      }}
-                      className="bg-green-500 hover:bg-green-600 text-white"
+                      onClick={submitOrder}
+                      disabled={isSubmitting || !loggedIn}
+                      className="bg-green-500 hover:bg-green-600 text-white disabled:opacity-50"
                     >
-                      Proceed to Checkout
+                      {isSubmitting ? 'Submitting...' : 'Proceed to Checkout'}
                     </Button>
                   </div>
+
+                  {!loggedIn && (
+                    <p className="text-sm text-red-600 mt-2 text-right">
+                      Please log in to place an order
+                    </p>
+                  )}
                 </div>
 
 

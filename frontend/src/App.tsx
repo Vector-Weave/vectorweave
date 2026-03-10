@@ -10,6 +10,7 @@ import ProfilePage from "./pages/ProfilePage";
 import AccountPage from "./pages/AccountPage";
 import ServicesPage from "./pages/ServicesPage";
 import UpgradeAccountPage from "./pages/UpgradeAccountPage";
+import ConnectionTest from "./components/ConnectionTest";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/account" element={<AccountPage />} />
           <Route path="/upgrade" element={<UpgradeAccountPage />} />
+          <Route path="/test" element={<ConnectionTest />} />
           <Route path="*" element={<div>404</div>} />
           <Route path="services" element={<ServicesPage />} />
         </Routes>

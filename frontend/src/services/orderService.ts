@@ -12,29 +12,35 @@ type Fragment = {
     dnaType: string | null;
 };
 
-type Order = {
-    id: number;
+type OrderData = {
+    supabaseUserId: string;
+    plasmidName: string;
+    buildType: 'MULTI_INSERT' | 'MUTAGENESIS' | 'NEW_BACKBONE';
     backboneName: string | null;
     fragments: Fragment[];
     mutations: string[];
+    totalPrice: number;
 }
 
-type OrderData = {
+type OrderResponse = {
+    orderId: number | null;
     plasmidName: string;
-    buildType: 'MULTI_INSERT' | 'MUTAGENESIS' | 'NEW_BACKBONE';
-
+    datePlaced: string | null;
+    totalPrice: number;
+    status: string;
+    message: string;
 }
 
 export const orderService = {
     //1. Get user backbones if logged in
-    getUserBackbones: async (): Promise<Backbone[]> => {
-        const response = await api.get('/backbones');       //fix this path based on service class implementation in backend
+    getUserBackbones: async (supabaseUserId: string): Promise<Backbone[]> => {
+        const response = await api.get(`/api/customers/backbones/${supabaseUserId}`);
         return response.data;
     },
 
-    //2. Checkout order
-    createOrder: async (orderData: OrderData): Promise<Order> => {
-        const response = await api.post('/orders', orderData);
+    //2. Create order
+    createOrder: async (orderData: OrderData): Promise<OrderResponse> => {
+        const response = await api.post('/api/orders', orderData);
         return response.data;
     }
 }

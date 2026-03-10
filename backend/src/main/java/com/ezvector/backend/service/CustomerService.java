@@ -1,16 +1,21 @@
 package com.ezvector.backend.service;
 
+import com.ezvector.backend.dto.BackboneDto;
 import com.ezvector.backend.dto.CreateCustomerRequest;
 import com.ezvector.backend.dto.CustomerResponse;
 import com.ezvector.backend.model.Customer;
 import com.ezvector.backend.model.CustomerSupabaseMapping;
+import com.ezvector.backend.model.Fragment;
 import com.ezvector.backend.repository.CustomerRepository;
 import com.ezvector.backend.repository.CustomerSupabaseMappingRepository;
+import com.ezvector.backend.repository.FragmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CustomerService {
@@ -20,6 +25,9 @@ public class CustomerService {
 
     @Autowired
     private CustomerSupabaseMappingRepository mappingRepository;
+
+    @Autowired
+    private FragmentRepository fragmentRepository;
 
     @Transactional
     public CustomerResponse createCustomer(CreateCustomerRequest request) {
@@ -94,5 +102,22 @@ public class CustomerService {
         }
 
         return customerRepository.findById(mappingOpt.get().getCustomerId());
+    }
+
+    public List<BackboneDto> getUserBackbones(String supabaseUserId) {
+        Optional<Customer> customerOpt = getCustomerEntityBySupabaseId(supabaseUserId);
+        
+        if (customerOpt.isEmpty()) {
+            throw new RuntimeException("Customer not found");
+        }
+
+        List<Fragment> backbones = fragmentRepository.findByCustomerAndIsBackbone(customerOpt.get(), true);
+        
+        return backbones.stream()
+                .map(fragment -> new BackboneDto(
+                    "Backbone " + fragment.getFragmentID(), // Or use a proper name field if available
+                    fragment.getSequence()
+                ))
+                .collect(Collectors.toList());
     }
 }
