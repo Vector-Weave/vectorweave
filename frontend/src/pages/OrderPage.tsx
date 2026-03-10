@@ -10,6 +10,8 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useNavigate } from "react-router-dom";
 import { isAuthenticated, getUser } from "@/lib/auth";
 import { orderService } from "@/services/orderService";
+import { cartService } from "@/services/cartService";
+import { useCart } from "@/context/CartContext";
 
 import {
   Select,
@@ -72,10 +74,12 @@ const OrderPage: React.FC = () => {
   // const [viewingBackbone, setViewingBackbone] = useState<Backbone | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderError, setOrderError] = useState("");
   
   const navigate = useNavigate();
+  const { refreshCartCount } = useCart();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -727,7 +731,93 @@ const OrderPage: React.FC = () => {
     return true;
   }
 
+  const addToCart = async () => {
+    if (isAddingToCart) {
+      return;
+    }
+
+    if (!handleSubmit()) {
+      return;
+    }
+
+    if (!loggedIn) {
+      setOrderError("You must be logged in to add to cart");
+      return;
+    }
+
+    setIsAddingToCart(true);
+    setOrderError("");
+    setOrderSuccess(false);
+
+    try {
+      const user = await getUser();
+      if (!user) {
+        setOrderError("Unable to get user information");
+        setIsAddingToCart(false);
+        return;
+      }
+
+      let buildType = 'MULTI_INSERT';
+      if (selectedOption === 1) buildType = 'MUTAGENESIS';
+      else if (selectedOption === 2) buildType = 'NEW_BACKBONE';
+
+      let totalPrice = 0;
+      if (selectedOption === 0) {
+        const pricing = computeMultiInsertPrice();
+        totalPrice = pricing?.total || 0;
+      } else if (selectedOption === 1) {
+        const pricing = computeMutagenesisPrice();
+        totalPrice = pricing?.total || 0;
+      } else if (selectedOption === 2) {
+        const pricing = computeOwnBackbonePrice();
+        totalPrice = pricing?.total || 0;
+      }
+
+      const fragmentsData = fragments
+        .map((seq, idx) => ({
+          sequence: seq.trim(),
+          dnaType: dnaTypes[idx] || 'SYNTHETIC'
+        }))
+        .filter(f => f.sequence !== "");
+
+      const mutationsData = mutations
+        .map(m => m.trim())
+        .filter(m => m !== "" && mutationFormat.test(m));
+
+      const cartData = {
+        supabaseUserId: user.id,
+        plasmidName: plasmidName,
+        buildType: buildType,
+        backboneName: selectedBackbone,
+        fragments: fragmentsData,
+        mutations: mutationsData,
+        price: totalPrice
+      };
+
+      await cartService.addToCart(cartData);
+      setOrderSuccess(true);
+      await refreshCartCount(); // Update cart count across the app
+      setTimeout(() => {
+        setOrderSuccess(false);
+        setPlasmidName("");
+        setFragments(Array(buildConfigs[selectedOption || 0].fragments).fill(""));
+        setDnaTypes(Array(buildConfigs[selectedOption || 0].fragments).fill(""));
+        setMutations([""]);
+      }, 2000);
+
+    } catch (error: any) {
+      setOrderError(error.response?.data || error.message || "Failed to add to cart");
+    } finally {
+      setIsAddingToCart(false);
+    }
+  }
+
   const submitOrder = async () => {
+    // Prevent duplicate submissions
+    if (isSubmitting) {
+      return;
+    }
+
     if (!handleSubmit()) {
       return;
     }
@@ -1616,7 +1706,7 @@ const OrderPage: React.FC = () => {
                   {/* Success/Error Messages */}
                   {orderSuccess && (
                     <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mt-4">
-                      ✅ Order placed successfully! Redirecting to orders page...
+                      ✅ Added to cart successfully!
                     </div>
                   )}
                   {orderError && (
@@ -1628,18 +1718,18 @@ const OrderPage: React.FC = () => {
                   {/* Buttons below the box */}
                   <div className="flex gap-4 justify-end mt-1">
                     <Button
-                      onClick={submitOrder}
-                      disabled={isSubmitting || !loggedIn}
+                      onClick={addToCart}
+                      disabled={isAddingToCart || isSubmitting || !loggedIn}
                       className="bg-sky-500 hover:bg-sky-600 text-white disabled:opacity-50"
                     >
-                      {isSubmitting ? 'Submitting...' : 'Add to Cart'}
+                      {isAddingToCart ? 'Adding...' : 'Add to Cart'}
                     </Button>
                     <Button
                       onClick={submitOrder}
-                      disabled={isSubmitting || !loggedIn}
+                      disabled={isAddingToCart || isSubmitting || !loggedIn}
                       className="bg-green-500 hover:bg-green-600 text-white disabled:opacity-50"
                     >
-                      {isSubmitting ? 'Submitting...' : 'Proceed to Checkout'}
+                      {isSubmitting ? 'Processing...' : 'Proceed to Checkout'}
                     </Button>
                   </div>
 

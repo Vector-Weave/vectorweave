@@ -1,12 +1,14 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Package, User as UserIcon, LogOut, ShoppingCart, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, User as UserIcon, LogOut, ShoppingCart, ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { logout } from "../lib/auth";
 import { useState } from "react";
+import { useCart } from "@/context/CartContext";
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { cartCount: cartItemCount } = useCart();
 
   const handleLogout = async () => {
     await logout();
@@ -57,6 +59,26 @@ const Sidebar: React.FC = () => {
         >
           <ShoppingCart className="w-5 h-5 flex-shrink-0" />
           {!isCollapsed && <span>Orders</span>}
+        </button>
+
+        <button
+          onClick={() => navigate("/cart")}
+          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+            isActive("/cart")
+              ? "bg-gray-100 text-gray-900"
+              : "text-gray-600 hover:bg-gray-50"
+          }`}
+          title="Cart"
+        >
+          <div className="relative">
+            <ShoppingBag className="w-5 h-5 flex-shrink-0" />
+            {cartItemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                {cartItemCount}
+              </span>
+            )}
+          </div>
+          {!isCollapsed && <span>Cart ({cartItemCount})</span>}
         </button>
 
         <button

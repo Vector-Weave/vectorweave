@@ -2,11 +2,13 @@ import { Button } from "./ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { getUser, logout } from "../lib/auth";
-import { User, ChevronDown } from "lucide-react";
+import { User, ChevronDown, ShoppingCart } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 const Header: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { cartCount: cartItemCount } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -70,6 +72,19 @@ const Header: React.FC = () => {
         </nav>
       </div>
       <div className="flex items-center gap-3">
+        {user && (
+          <button
+            onClick={() => navigate("/cart")}
+            className="relative hover:bg-gray-100 p-2 rounded-md transition-colors"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {cartItemCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {cartItemCount}
+              </span>
+            )}
+          </button>
+        )}
         {user ? (
           <div className="relative" ref={dropdownRef}>
             <button
