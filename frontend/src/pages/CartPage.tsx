@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
 import Sidebar from '../components/Sidebar';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { cartService } from '@/services/cartService';
 import type { CartData } from '@/services/cartService';
-import { orderService } from '@/services/orderService';
 import { stripeService } from '@/services/stripeService';
 import { getUser, isAuthenticated } from '@/lib/auth';
 import { Trash2, ShoppingCart, CreditCard } from 'lucide-react';
