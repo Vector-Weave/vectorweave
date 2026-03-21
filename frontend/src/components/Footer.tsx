@@ -1,48 +1,20 @@
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import logoSrc from "../assets/VectorWeave-final2-b.png";
 
-const Footer: React.FC = () => {
-  return (
-      <footer className="bg-black text-gray-300 mt-32">
-          <div className="container mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-4 gap-10">
-              <div>
-                  <h3 className="text-white font-bold text-lg mb-4">EZVector</h3>
-                  <p className="text-sm text-gray-400">Custom plasmid construction, mutagenesis, and synthetic cloning—built fast and built right.</p>
-              </div>
-
-              <div>
-                  <h4 className="text-white font-semibold mb-3">Services</h4>
-                  <ul className="space-y-2 text-sm">
-                      <li><Link to="/services/multi-insert" className="hover:text-white">Multi-Insert Cloning</Link></li>
-                      <li><Link to="/services/custom-backbone" className="hover:text-white">Custom Backbones</Link></li>
-                      <li><Link to="/services/multi-site-mutagenesis" className="hover:text-white">Multi-Site Mutagenesis</Link></li>
-                      <li><Link to="/services/synthetic-dna" className="hover:text-white">Synthetic DNA Cloning</Link></li>
-                  </ul>
-              </div>
-
-              <div>
-                  <h4 className="text-white font-semibold mb-3">Company</h4>
-                  <ul className="space-y-2 text-sm">
-                      <li><Link to="/about" className="hover:text-white">About</Link></li>
-                      <li><Link to="/pricing" className="hover:text-white">Pricing</Link></li>
-                      <li><Link to="/faq" className="hover:text-white">FAQ</Link></li>
-                      <li><Link to="/sample-prep" className="hover:text-white">Sample Prep</Link></li>
-                  </ul>
-              </div>
-
-              <div>
-                  <h4 className="text-white font-semibold mb-3">Get Started</h4>
-                  <Link to="/order">
-                    <Button variant="secondary" className="w-full">Start Cloning</Button>
-                  </Link>
-              </div>
-          </div>
-
-          <div className="border-t border-white/10 py-6 text-center text-xs text-gray-500">
-              © {new Date().getFullYear()} EZVector. All rights reserved.
-          </div>
-      </footer>
-  );
-};
-
-export default Footer;
+export default function Footer() {
+    return (
+        <footer style={{ background: "#1d3461", color: "rgba(255,255,255,0.7)", padding: "2.5rem 3rem", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.82rem" }}>
+            <a href="#" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+                <img src={logoSrc} alt="VectorWeave" style={{ height: 36, width: "auto" }} />
+            </a>
+            <span>© 2026 VectorWeave. All rights reserved.</span>
+            <nav style={{ display: "flex", gap: 0 }}>
+                {["Services", "How-to", "FAQ", "Contact Us"].map(l => (
+                    <a key={l} href="#" style={{ color: "rgba(255,255,255,0.6)", textDecoration: "none", marginLeft: "1.5rem", transition: "color 0.15s" }}
+                       onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
+                       onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.6)")}
+                    >{l}</a>
+                ))}
+            </nav>
+        </footer>
+    );
+}
