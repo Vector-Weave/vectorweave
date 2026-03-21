@@ -2,6 +2,7 @@ package com.ezvector.backend.controller;
 
 import com.ezvector.backend.dto.CreateCheckoutSessionRequest;
 import com.ezvector.backend.dto.CreateCheckoutSessionResponse;
+import com.ezvector.backend.security.AuthorizationHelper;
 import com.ezvector.backend.service.CartService;
 import com.ezvector.backend.service.StripeService;
 import com.stripe.exception.SignatureVerificationException;
@@ -14,6 +15,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Stripe Controller - Handles payment processing
+ *
+ * Security:
+ * - create-checkout-session: Requires authentication + authorization
+ * - verify-session: Requires authentication (sessionId is secret)
+ * - webhook: Public endpoint (verified by Stripe signature)
+ */
 @RestController
 @RequestMapping("/api/stripe")
 public class StripeController {
@@ -24,12 +33,28 @@ public class StripeController {
     @Autowired
     private CartService cartService;
 
+    @Autowired
+    private AuthorizationHelper authHelper;
+
     @Value("${stripe.webhook.secret:}")
     private String webhookSecret;
 
+    /**
+     * Create Stripe checkout session
+     *
+     * Security:
+     * - User must be authenticated (JWT required)
+     * - User can only create checkout for their own cart
+     */
     @PostMapping("/create-checkout-session")
     public ResponseEntity<?> createCheckoutSession(@RequestBody CreateCheckoutSessionRequest request) {
         try {
+            // AUTHORIZATION CHECK: User can only checkout their own cart
+            if (!authHelper.isCurrentUser(request.getSupabaseUserId())) {
+                return ResponseEntity.status(403)
+                    .body("Forbidden: Cannot create checkout session for another user");
+            }
+
             CreateCheckoutSessionResponse response = stripeService.createCheckoutSession(request);
             return ResponseEntity.ok(response);
         } catch (StripeException e) {

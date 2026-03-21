@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -104,7 +105,7 @@ const AuthPage: React.FC = () => {
 
         // Step 2: Create Customer in backend and associate with Supabase user
         try {
-          const backendResponse = await fetch("http://localhost:8080/api/customers", {
+          const backendResponse = await fetch(`${backendUrl}/api/customers`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -132,7 +133,7 @@ const AuthPage: React.FC = () => {
         } catch (backendError) {
           console.error("Backend error:", backendError);
           const errorMsg = backendError instanceof Error ? backendError.message : 'Unknown error';
-          setError(`Account created but backend is not responding: ${errorMsg}. Please ensure the backend server is running at http://localhost:8080`);
+          setError(`Account created but backend is not responding: ${errorMsg}. Please ensure the backend server is running at ${backendUrl}`);
           setLoading(false);
         }
       }

@@ -173,11 +173,59 @@ public class OrderService {
 
     private Fragment.DNAsource parseDnaSource(String dnaType) {
         if (dnaType == null) return Fragment.DNAsource.SYNTHETIC;
-        
+
         try {
             return Fragment.DNAsource.valueOf(dnaType.toUpperCase());
         } catch (IllegalArgumentException e) {
             return Fragment.DNAsource.SYNTHETIC;
         }
+    }
+
+    /**
+     * Get all orders for a user
+     *
+     * Flow:
+     * 1. Look up internal customer ID from Supabase user ID
+     * 2. Fetch all orders for that customer
+     * 3. Convert Order entities to OrderResponse DTOs
+     *
+     * @param supabaseUserId - The Supabase Auth user ID
+     * @return List of OrderResponse objects
+     */
+    public List<OrderResponse> getUserOrders(String supabaseUserId) {
+        // 1. Get customer from Supabase mapping
+        CustomerSupabaseMapping mapping = mappingRepository
+                .findBySupabaseUserId(supabaseUserId)
+                .orElseThrow(() -> new RuntimeException("Customer not found for Supabase user"));
+
+        Customer customer = customerRepository.findById(mapping.getCustomerId())
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        // 2. Get all orders for this customer
+        List<Order> orders = customer.getCustomerOrders();
+
+        // 3. Convert to DTOs
+        List<OrderResponse> responses = new ArrayList<>();
+        for (Order order : orders) {
+            // Get plasmid name from first order item
+            String plasmidName = "Unknown";
+            if (order.hasOrderItems()) {
+                OrderItem firstItem = order.getOrderItem(0);
+                if (firstItem != null && firstItem.getCorrespondingPlasmid() != null) {
+                    plasmidName = firstItem.getCorrespondingPlasmid().getPlasmidName();
+                }
+            }
+
+            responses.add(new OrderResponse(
+                    order.getOrderID(),
+                    plasmidName,
+                    order.getDatePlaced(),
+                    order.getTotalOrderPrice(),
+                    order.getStatus().toString(),
+                    "Order retrieved successfully"
+            ));
+        }
+
+        return responses;
     }
 }

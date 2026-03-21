@@ -42,5 +42,11 @@ export const orderService = {
     createOrder: async (orderData: OrderData): Promise<OrderResponse> => {
         const response = await api.post('/api/orders', orderData);
         return response.data;
+    },
+
+    //3. Get user's order history
+    getUserOrders: async (supabaseUserId: string): Promise<OrderResponse[]> => {
+        const response = await api.get(`/api/orders/${supabaseUserId}`);
+        return response.data;
     }
 }

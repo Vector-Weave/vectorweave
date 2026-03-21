@@ -4,20 +4,24 @@ import Sidebar from "../components/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { getUser } from "../lib/auth";
+import { orderService } from "../services/orderService";
 import { Plus } from "lucide-react";
 
+// Type matching backend OrderResponse
 interface Order {
-  id: string;
-  date: string;
-  status: "Pending" | "Completed" | "Processing";
-  total: string;
-  items: string;
+  orderId: number;
+  plasmidName: string;
+  datePlaced: string;
+  totalPrice: number;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETE";
+  message: string;
 }
 
 export default function OrdersListPage() {
   const [, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,12 +36,14 @@ export default function OrdersListPage() {
         return;
       }
       setUser(userData);
-      // TODO: Fetch orders from backend
-      // For now, using empty array
-      setOrders([]);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      navigate("/auth");
+
+      // Fetch orders from backend
+      const orderData = await orderService.getUserOrders(userData.id);
+      setOrders(orderData);
+    } catch (error: any) {
+      console.error("Error fetching orders:", error);
+      setError(error.response?.data || "Failed to load orders");
+      // Don't redirect on error - user is authenticated, just show error
     } finally {
       setLoading(false);
     }
@@ -53,14 +59,27 @@ export default function OrdersListPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Completed":
+      case "COMPLETE":
         return "bg-green-100 text-green-800";
-      case "Pending":
+      case "NOT_STARTED":
         return "bg-yellow-100 text-yellow-800";
-      case "Processing":
+      case "IN_PROGRESS":
         return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const formatStatus = (status: string) => {
+    switch (status) {
+      case "COMPLETE":
+        return "Completed";
+      case "NOT_STARTED":
+        return "Pending";
+      case "IN_PROGRESS":
+        return "Processing";
+      default:
+        return status;
     }
   };
 
