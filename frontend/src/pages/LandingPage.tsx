@@ -1,381 +1,365 @@
-import React from "react";
-import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import Footer from "@/components/Footer";
-import Header from "@/components/Header";
-import mutagenesisImg from "../assets/2.png"
-import customBackboneImg from "../assets/3.png"
-import multiInsertImg from "../assets/1.png"
-import { Dna, Sparkles, Clock, DollarSign, Zap } from "lucide-react";
+import BG_B64 from "../assets/hero.png";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import { useState } from "react";
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0 },
-};
+/* ── Types ─────────────────────────────────────────── */
+interface ServiceItem { title: string; tagline: string; body: string; features: string[]; wide?: boolean; }
+interface StepItem { n: string; title: string; body: string; }
+interface CompareRow { feat: string; us: string; vendors: string; diy: string; }
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15
-    }
+/* ── Data ───────────────────────────────────────────── */
+const SERVICES: ServiceItem[] = [
+  {
+    title: "Multi-Insert Cloning",
+    tagline: '"Maybe it\'ll work this time" isn\'t a workflow.',
+    body: "Seamlessly assemble complex plasmids with up to 5 inserts in a single step. Each plasmid is sequence-verified and ready to use, saving you from wasted weekends and repeat reactions.",
+    features: ["Up to 5 fragments in one seamless build", "No restriction sites, no scars", "Sequence-verified results in days"],
+  },
+  {
+    title: "Custom Backbone Construction",
+    tagline: "Why settle for someone else's plasmid backbone?",
+    body: "Design and build entirely new plasmid backbones from scratch. Combine any elements — markers, origins, promoters, reporters — to create the custom vector you've always wanted.",
+    features: ["Freedom from pre-built constructs", "Mix & match any combination of parts", "Concept to construct in days, not months"],
+  },
+  {
+    title: "Multi-Site & Codon Mutagenesis",
+    tagline: "Why make one change when you can make five?",
+    body: "Make targeted site-directed or codon-level mutations at up to five sites in a single build. Create parallel designs or randomized libraries without iterative PCRs or screening cycles.",
+    features: ["Up to 5 mutations per build", "Point mutations or codon-level changes", "Parallel variant libraries in one step"],
+  },
+  {
+    title: "Domain Mutagenesis",
+    tagline: "Why mutagenize just one domain when you can do three?",
+    body: "Create variant libraries by mutating separate DNA domains simultaneously. Swap, randomize, and reengineer regions in parallel. Focus on what your variants teach you, not how to make them.",
+    features: ["Up to 3 simultaneous domain mutations", "Seamless integration of parts", "Outsource the grind, keep the science"],
+  },
+  {
+    title: "Synthetic DNA Cloning",
+    tagline: "We handle the vendors. You handle the science.",
+    body: "Clone synthetic DNA fragments into any plasmid backbone, without onboarding fees. We coordinate with synthesis providers, clone into any vector — even low copy plasmids — and send you verified constructs.",
+    features: ["Clone into your vector, not a vendor's", "No onboarding fees or setup minimums", "We handle all vendor communication"],
+    wide: true,
+  },
+];
+
+const STEPS: StepItem[] = [
+  { n: "1", title: "Place your Order", body: "Upload your plasmid design online. Pay with credit card or PO and receive your submission instructions." },
+  { n: "2", title: "Prepare Samples", body: "Prepare your DNA fragments for submission following our simple sample prep guide." },
+  { n: "3", title: "Submit Samples", body: "Place your samples in a dropbox or mail them directly to us. No complicated shipping." },
+  { n: "4", title: "Receive your Plasmid", body: "We'll send your sequence-verified plasmid, ready to use in your experiments." },
+];
+
+const COMPARE_ROWS: CompareRow[] = [
+  { feat: "Vector Flexibility", us: "Clone into any plasmid. No vendor lock-in.", vendors: "Restricted to vendor-approved backbones.", diy: "Requires manual prep and compatibility work." },
+  { feat: "Assembly Capability", us: "Up to 5 inserts of any length, GC content & complexity.", vendors: "Long or complex sequences often fail.", diy: "1–2 inserts before failure rates spike." },
+  { feat: "Onboarding Costs", us: "No onboarding fees. Pay only for what you build.", vendors: "Added setup and onboarding fees per vector.", diy: "High reagent and consumable costs." },
+  { feat: "Speed & Time", us: "Zero bench time and ~1 week turnaround.", vendors: "No hands-on work, but long delivery times.", diy: "Hours of setup, repeats, and troubleshooting." },
+  { feat: "Total Cost", us: "Predictable and affordable. No hidden fees.", vendors: "High costs for long or complex builds.", diy: "High reagent, labor, and re-do costs." },
+];
+
+/* ── Plasmid SVG ────────────────────────────────────── */
+function PlasmidSVG() {
+  const [deg, setDeg] = useState(0);
+  const [spinning, setSpinning] = useState(false);
+
+  function handleHover() {
+    if (spinning) return;
+    setSpinning(true);
+    setDeg(d => d + 360);
+    setTimeout(() => setSpinning(false), 900);
   }
-};
 
-const LandingPage: React.FC = () => {
   return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-sky-50 via-blue-50 to-sky-100">
-        <Header />
-        <main className="flex-1 container mx-auto px-4 py-16" aria-label="Main">
-          {/* HERO with animated background */}
-          <motion.section
-              initial="hidden"
-              animate="visible"
-              variants={fadeUp}
-              transition={{ duration: 0.6 }}
-              className="grid md:grid-cols-2 gap-12 items-center relative"
-          >
-            {/* Floating DNA helixes in background */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
-              <motion.div
-                  animate={{
-                    rotate: 360,
-                    y: [0, -20, 0]
-                  }}
-                  transition={{
-                    rotate: { duration: 20, repeat: Infinity, ease: "linear" },
-                    y: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-                  }}
-                  className="absolute top-10 right-20"
-              >
-                <Dna size={100} className="text-sky-600" />
-              </motion.div>
-
-            </div>
-
-            <div className="relative z-10">
-              <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="inline-block mb-4"
-              >
-              </motion.div>
-
-              <h1 className="text-6xl font-extrabold text-sky-800 mb-6 leading-tight">
-                Clone Anything.
-              </h1>
-
-              <p className="text-xl text-slate-700 mb-8 leading-relaxed">
-                You design it. We build it. Multi-insert cloning, multi-site mutagenesis,
-                and custom plasmid backbones, all delivered in <span className="font-bold text-sky-600">days</span>. Send your DNA and we’ll do the rest.
-              </p>
-
-              <div className="flex gap-4 items-center">
-                <Link to="/order">
-                  <Button size="lg" className="group">
-                    Start Cloning
-                    <Zap className="ml-2 group-hover:animate-pulse" size={18} />
-                  </Button>
-                </Link>
-                <Link to="/about">
-                  <Button size="lg" variant="outline">Learn More</Button>
-                </Link>
-
-              </div>
-            </div>
-
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-                className="relative h-96 rounded-2xl bg-gradient-to-tr from-sky-600 via-blue-500 to-indigo-600 shadow-2xl overflow-hidden group"
-            >
-              {/* Animated grid overlay */}
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAwIDEwIEwgNDAgMTAgTSAxMCAwIEwgMTAgNDAgTSAwIDIwIEwgNDAgMjAgTSAyMCAwIEwgMjAgNDAgTSAwIDMwIEwgNDAgMzAgTSAzMCAwIEwgMzAgNDAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-20"></div>
-
-              {/* Floating DNA helix visualization */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <motion.div
-                    className="relative w-40 h-72"
-                    animate={{ rotateY: 360 }}
-                    transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-                    style={{ transformStyle: "preserve-3d" }}
-                >
-                  {[...Array(24)].map((_, i) => {
-                    const y = i * 10; // vertical spacing
-                    const phase = (i / 24) * Math.PI * 2;
-
-                    return (
-                        <div key={i} className="absolute left-1/2" style={{ top: y }}>
-                          {/* Left strand */}
-                          <motion.div
-                              className="absolute w-3 h-3 rounded-full bg-cyan-300"
-                              animate={{ x: Math.sin(phase) * 30, opacity: [0.5, 1, 0.5] }}
-                              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                          />
-
-                          {/* Right strand */}
-                          <motion.div
-                              className="absolute w-3 h-3 rounded-full bg-pink-300"
-                              animate={{ x: -Math.sin(phase) * 30, opacity: [0.5, 1, 0.5] }}
-                              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                          />
-
-                          {/* Base pair connection */}
-                          <motion.div
-                              className="absolute h-[2px] bg-white/40"
-                              style={{ width: "60px", left: "-30px", top: "5px" }}
-                              animate={{ opacity: [0.3, 0.8, 0.3] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                          />
-                        </div>
-                    );
-                  })}
-                </motion.div>
-              </div>
-
-
-              {/* Gradient overlay on hover */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </motion.div>
-          </motion.section>
-
-          {/* SERVICES ICONS*/}
-          <motion.section
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="mt-32 grid md:grid-cols-3 gap-8"
-          >
-            {[
-              { img: mutagenesisImg, title: "Multi-Site Mutagenesis" },
-              { img: multiInsertImg, title: "Multi-Insert Cloning" },
-              { img: customBackboneImg, title: "Custom Backbones" }
-            ].map((s, i) => (
-                <motion.div key={i} variants={fadeUp} whileHover={{ y: -8, scale: 1.02 }}>
-                  <Card className="relative overflow-hidden p-8 text-center group hover:shadow-xl transition-all border-2 hover:border-sky-200">
-                    {/* Animated gradient background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-sky-50 to-blue-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-                    <div className="relative z-10">
-                      <motion.div
-                          whileHover={{ rotate: 360 }}
-                          transition={{ duration: 0.6 }}
-                          className="inline-block mb-4"
-                      >
-                        <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-sky-100 to-blue-100 flex items-center justify-center">
-                          <img
-                              src={s.img}
-                              alt={s.title}
-                              className="w-12 h-12 object-contain"
-                          />
-                        </div>
-                      </motion.div>
-
-                      <h3 className="text-xl font-bold mb-2 text-slate-800">{s.title}</h3>
-                    </div>
-                  </Card>
-                </motion.div>
+      <svg
+          viewBox="-150 -150 300 300"
+          xmlns="http://www.w3.org/2000/svg"
+          style={{ display: "block", width: 280, height: 280, cursor: "pointer" }}
+          onMouseEnter={handleHover}
+      >
+        <g style={{ transform: `rotate(${deg}deg)`, transformOrigin: "0px 0px", transition: spinning ? "transform 0.9s cubic-bezier(0.4,0,0.2,1)" : "none" }}>
+          <circle cx="0" cy="0" r="110" fill="none" stroke="#e8ecf4" strokeWidth="18" />
+          <path fill="none" stroke="#5b7fb5" strokeWidth="18" strokeLinecap="round" d="M 0 -110 A 110 110 0 0 1 95.26 -55" />
+          <path fill="none" stroke="#1a7a4a" strokeWidth="18" strokeLinecap="round" d="M 95.26 -55 A 110 110 0 0 1 95.26 55" />
+          <path fill="none" stroke="#d94f2b" strokeWidth="18" strokeLinecap="round" d="M 95.26 55 A 110 110 0 0 1 0 110" />
+          <path fill="none" stroke="#7c5cbf" strokeWidth="18" strokeLinecap="round" d="M 0 110 A 110 110 0 0 1 -95.26 55" />
+          <path fill="none" stroke="#2a8a9a" strokeWidth="18" strokeLinecap="round" d="M -95.26 55 A 110 110 0 0 1 -95.26 -55" />
+          <path fill="none" stroke="#c0392b" strokeWidth="18" strokeLinecap="round" d="M -95.26 -55 A 110 110 0 0 1 0 -110" />
+          <circle cx="0" cy="0" r="85" fill="none" stroke="#eef1f7" strokeWidth="8" />
+          <path fill="none" stroke="#b8c3d8" strokeWidth="2.5" strokeDasharray="4,6" d="M 0,-85 A 85,85 0 1,1 -0.1,-85" />
+          <text x="0" y="-60" textAnchor="middle" fontFamily="DM Mono, monospace" fontSize="8" fill="#4a5a78" fontWeight="500">pUC19</text>
+          <text x="0" y="-48" textAnchor="middle" fontFamily="DM Mono, monospace" fontSize="6.5" fill="#7a8ca8">2686 bp</text>
+          <g stroke="#5b7fb5" strokeWidth="1.5">
+            {[0, 72, 144, 216, 288].map(d => (
+                <line key={d} x1="85" y1="0" x2="100" y2="0" transform={`rotate(${d})`} />
             ))}
-          </motion.section>
+          </g>
+          <circle cx="0" cy="0" r="126" fill="none" stroke="#1d3461" strokeWidth="1" strokeDasharray="2,3" opacity="0.4" />
+        </g>
+      </svg>
+  );
+}
 
-          {/* VALUE PROP with personality */}
-          <section className="mt-40 text-center">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-            >
-              <h2 className="text-5xl font-bold mb-6 text-slate-900">
-                Stop cloning. Start <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-blue-600">creating</span>.
-              </h2>
-              <p className="max-w-3xl mx-auto text-xl text-slate-600 mb-4">
-                Cloning is great…if you think weekends are overrated. We don't.
-              </p>
-              <p className="max-w-2xl mx-auto text-lg text-slate-500 mb-20">
-                We'll spare you the frustration and agarose. Send us your DNA and we’ll give you that plasmid you’ve
-                been chasing, so you can finally take Saturday off.
-              </p>
-            </motion.div>
+/* ── Main ───────────────────────────────────────────── */
+export default function LandingPage() {
+  return (
+      <>
+        <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; scroll-behavior: smooth; }
+        body { font-family: 'DM Sans', sans-serif; background: #f4f6fa; color: #1a2236; overflow-x: hidden; }
 
-            <motion.div
-                variants={staggerContainer}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                className="grid md:grid-cols-3 gap-8"
-            >
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .anim-0 { animation: fadeUp 0.6s 0.0s ease both; }
+        .anim-1 { animation: fadeUp 0.6s 0.1s ease both; }
+        .anim-2 { animation: fadeUp 0.6s 0.2s ease both; }
+        .anim-3 { animation: fadeUp 0.6s 0.3s ease both; }
+        .anim-4 { animation: fadeUp 0.6s 0.4s ease both; }
+        .anim-5 { animation: fadeUp 0.7s 0.25s ease both; }
+
+        .svc-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, #1d3461, #8fa8d0);
+          opacity: 0;
+          transition: opacity 0.2s;
+          border-radius: 14px 14px 0 0;
+        }
+        .svc-card:hover::before { opacity: 1; }
+        .svc-card:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(29,52,97,0.08); border-color: #8fa8d0 !important; }
+        .value-card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(29,52,97,0.08); border-color: #8fa8d0 !important; }
+      `}</style>
+
+        <Header />
+
+        {/* HERO */}
+        <section style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", overflow: "hidden", paddingTop: 60 }}>
+          <div style={{
+            position: "absolute", inset: 0, zIndex: 0,
+            backgroundImage: `url(${BG_B64})`,
+            backgroundSize: "cover", backgroundPosition: "center",
+            opacity: 0.25,
+          }} />
+          <div style={{
+            position: "relative", zIndex: 5, flex: 1,
+            display: "grid", gridTemplateColumns: "1fr 1fr",
+            alignItems: "center", maxWidth: 1200, margin: "0 auto",
+            padding: "5rem 3rem 8rem", gap: "4rem", width: "100%",
+          }}>
+            <div>
+              <h1 className="anim-1" style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 800, fontSize: "clamp(3.2rem, 6vw, 5.5rem)", lineHeight: 1.0, letterSpacing: "-0.03em", marginBottom: "1rem" }}>
+                <span style={{ color: "#1d3461" }}>Clone</span><br />
+                <span style={{ color: "#d94f2b" }}>Anything.</span>
+              </h1>
+              <p className="anim-2" style={{ fontSize: "1.15rem", fontWeight: 400, color: "#4a5a78", letterSpacing: "0.01em", marginBottom: "0.75rem" }}>
+                You design it. We build it.
+              </p>
+              <p className="anim-3" style={{ fontSize: "0.95rem", color: "#4a5a78", lineHeight: 1.7, maxWidth: 420, marginBottom: "2.5rem" }}>
+                Multi-insert cloning, multi-site mutagenesis, and custom plasmid backbones — all delivered in days. Send your DNA and we'll do the rest.
+              </p>
+              <div className="anim-4" style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                <a href="#" style={{ background: "#d94f2b", color: "#fff", border: "none", padding: "0.85rem 2.2rem", borderRadius: 8, fontSize: "1rem", fontWeight: 600, textDecoration: "none", transition: "all 0.18s", display: "inline-block" }}
+                   onMouseEnter={e => { e.currentTarget.style.background = "#b84020"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(217,79,43,0.3)"; }}
+                   onMouseLeave={e => { e.currentTarget.style.background = "#d94f2b"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+                >Start Cloning</a>
+                <a href="#" style={{ color: "#1d3461", fontSize: "0.9rem", fontWeight: 500, textDecoration: "none", borderBottom: "1px solid transparent", transition: "border-color 0.15s" }}
+                   onMouseEnter={e => (e.currentTarget.style.borderBottomColor = "#1d3461")}
+                   onMouseLeave={e => (e.currentTarget.style.borderBottomColor = "transparent")}
+                >See our services →</a>
+              </div>
+            </div>
+            <div className="anim-5" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ background: "rgba(255,255,255,0.75)", backdropFilter: "blur(8px)", borderRadius: 20, padding: "2.5rem", border: "1px solid rgba(212,218,232,0.7)", boxShadow: "0 12px 48px rgba(29,52,97,0.1)" }}>
+                <PlasmidSVG />
+              </div>
+            </div>
+          </div>
+          <div style={{ position: "absolute", bottom: -2, left: 0, right: 0, width: "100%", zIndex: 10, lineHeight: 0 }}>
+            <svg viewBox="0 0 1440 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style={{ display: "block", width: "100%", height: 100 }}>
+              <path d="M0,100 L0,62 C120,12 240,92 360,55 C480,15 600,88 720,52 C840,14 960,90 1080,54 C1200,16 1320,88 1440,54 L1440,100 Z" fill="#f4f6fa" />
+            </svg>
+          </div>
+        </section>
+
+        {/* BELOW HERO */}
+        <div style={{ background: "#f4f6fa", position: "relative", zIndex: 5 }}>
+
+          {/* Stop Cloning Section */}
+          <section style={{ padding: "5rem 3rem", maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
+            <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 300, fontSize: "2.6rem", letterSpacing: "-0.03em", color: "#1d3461", marginBottom: "1.5rem" }}>Stop cloning. Start creating.</h2>
+            <p style={{ fontSize: "1rem", color: "#4a5a78", lineHeight: 1.7, maxWidth: 800, margin: "0 auto 3.5rem" }}>
+              Cloning is great... if you think weekends are overrated. We don't. We'll spare you the frustration and the agarose. Send us your DNA and we'll give you that plasmid you've been chasing, so you can finally take Saturday off.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem" }}>
               {[
                 {
-                  icon: Clock,
-                  title: "Save Time",
-                  text: "Spend your time on experiments that matter, not cloning. Just send us your design and DNA.",
-                  color: "from-sky-600 to-sky-500"
+                  title: "Synthetic Inserts",
+                  icon: <svg viewBox="0 0 80 80" fill="none" style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="#d4dae8" strokeWidth="6"/>
+                    <path d="M 33 10.5 A 32 32 0 0 1 47 10.5" fill="none" stroke="#d94f2b" strokeWidth="6"/>
+                  </svg>,
                 },
                 {
-                  icon: DollarSign,
-                  title: "Save Money",
-                  text: "Stop burning money on costly reagents and do-overs. One order one price: no kits, no repeats, no surprises.",
-                  color: "from-emerald-500 to-green-500"
+                  title: "Multi-Insert Cloning",
+                  icon: <svg viewBox="0 0 80 80" fill="none" style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="#d4dae8" strokeWidth="6"/>
+                    <path d="M 30 12 A 32 32 0 0 1 38.5 8.2" fill="none" stroke="#d94f2b" strokeWidth="6"/>
+                    <path d="M 38.5 8.2 A 32 32 0 0 1 50 12" fill="none" stroke="#5b7fb5" strokeWidth="6"/>
+                    <path d="M 50 12 A 32 32 0 0 1 58 21" fill="none" stroke="#1a7a4a" strokeWidth="6"/>
+                  </svg>,
                 },
                 {
-                  icon: Sparkles,
-                  title: "Do Better Science",
-                  text: "Build the complex plasmids you’ve only dreamed about. If you can design it, we can make it real.",
-                  color: "from-violet-500 to-purple-500"
-                }
-              ].map((v, i) => (
-                  <motion.div key={i} variants={fadeUp} whileHover={{ scale: 1.05 }}>
-                    <Card className="p-8 h-full hover:shadow-2xl transition-all group">
-                      <div className={`w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${v.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                        <v.icon className="text-white" size={32} />
-                      </div>
-                      <h3 className="font-bold text-xl mb-3 text-slate-800">{v.title}</h3>
-                      <p className="text-slate-600 leading-relaxed">{v.text}</p>
-                    </Card>
-                  </motion.div>
+                  title: "Build New Plasmid Backbones",
+                  icon: <svg viewBox="0 0 80 80" fill="none" style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
+                    <path d="M 40 8 A 32 32 0 0 1 72 40" fill="none" stroke="#1d3461" strokeWidth="6"/>
+                    <path d="M 72 40 A 32 32 0 0 1 40 72" fill="none" stroke="#5b7fb5" strokeWidth="6"/>
+                    <path d="M 40 72 A 32 32 0 0 1 8 40" fill="none" stroke="#d94f2b" strokeWidth="6"/>
+                    <path d="M 8 40 A 32 32 0 0 1 40 8" fill="none" stroke="#f1c40f" strokeWidth="6"/>
+                  </svg>,
+                },
+                {
+                  title: "Multi-Site Mutagenesis",
+                  icon: <svg viewBox="0 0 80 80" fill="none" style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="#d4dae8" strokeWidth="6"/>
+                    <path d="M 40 8 l 2 6 l 6 0 l -5 4 l 2 6 l -5 -4 l -5 4 l 2 -6 l -5 -4 l 6 0 Z" fill="#d94f2b"/>
+                    <path d="M 72 40 l 2 6 l 6 0 l -5 4 l 2 6 l -5 -4 l -5 4 l 2 -6 l -5 -4 l 6 0 Z" fill="#5b7fb5"/>
+                    <path d="M 16 60 l 2 6 l 6 0 l -5 4 l 2 6 l -5 -4 l -5 4 l 2 -6 l -5 -4 l 6 0 Z" fill="#1a7a4a"/>
+                  </svg>,
+                },
+              ].map(item => (
+                  <div key={item.title} className="value-card" style={{ background: "#fff", border: "1px solid #d4dae8", borderRadius: 14, padding: "2rem 1.5rem", textAlign: "center", transition: "all 0.2s" }}>
+                    {item.icon}
+                    <h3 style={{ fontSize: "0.95rem", fontWeight: 600, color: "#1a2236" }}>{item.title}</h3>
+                  </div>
               ))}
-            </motion.div>
-          </section>
-
-          {/* WORKFLOW - Fixed with straight dotted lines */}
-          <section className="mt-40">
-            <h2 className="text-4xl font-bold text-center mb-4">Your New Cloning Workflow</h2>
-            <p className="text-center text-slate-600 mb-20 text-lg">Four simple steps. Zero headaches.</p>
-
-            <div className="max-w-4xl mx-auto">
-              {/* Step 1 */}
-              <motion.div
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeUp}
-                  className="relative"
-              >
-                <div className="flex items-start gap-8 mb-8">
-                  <div className="flex-shrink-0 w-32 h-32 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-lg">
-                    1
-                  </div>
-                  <div className="flex-1 pt-4">
-                    <h3 className="font-bold text-2xl mb-3 text-slate-800">Place your Order</h3>
-                    <p className="text-slate-600 text-lg leading-relaxed">
-                      Upload your plasmid design online. Pay with a credit card or PO and get your submission instructions instantly.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Dotted line connector */}
-                <div className="ml-16 h-16 border-l-4 border-dashed border-sky-300"></div>
-              </motion.div>
-
-              {/* Step 2 */}
-              <motion.div
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeUp}
-                  className="relative"
-              >
-                <div className="flex items-start gap-8 mb-8">
-                  <div className="flex-shrink-0 w-32 h-32 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-lg">
-                    2
-                  </div>
-                  <div className="flex-1 pt-4">
-                    <h3 className="font-bold text-2xl mb-3 text-slate-800">Prepare Samples</h3>
-                    <p className="text-slate-600 text-lg leading-relaxed">
-                      Get your DNA fragments ready for submission.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Dotted line connector */}
-                <div className="ml-16 h-16 border-l-4 border-dashed border-sky-300"></div>
-              </motion.div>
-
-              {/* Step 3 */}
-              <motion.div
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeUp}
-                  className="relative"
-              >
-                <div className="flex items-start gap-8 mb-8">
-                  <div className="flex-shrink-0 w-32 h-32 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-lg">
-                    3
-                  </div>
-                  <div className="flex-1 pt-4">
-                    <h3 className="font-bold text-2xl mb-3 text-slate-800">Submit your Samples</h3>
-                    <p className="text-slate-600 text-lg leading-relaxed">
-                      Place your samples in a dropbox or mail them to us.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Dotted line connector */}
-                <div className="ml-16 h-16 border-l-4 border-dashed border-sky-300"></div>
-              </motion.div>
-
-              {/* Step 4 */}
-              <motion.div
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeUp}
-              >
-                <div className="flex items-start gap-8">
-                  <div className="flex-shrink-0 w-32 h-32 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center text-white font-bold text-3xl shadow-lg">
-                    4
-                  </div>
-                  <div className="flex-1 pt-4">
-                    <h3 className="font-bold text-2xl mb-3 text-slate-800">Receive your Plasmid</h3>
-                    <p className="text-slate-600 text-lg leading-relaxed">
-                      We send you your fully assembled plasmid with verified sequence.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
             </div>
           </section>
 
-          {/* CTA with more punch */}
-          <motion.section
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mt-40 relative overflow-hidden bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600 text-white rounded-3xl p-16 text-center shadow-2xl"
-          >
-            {/* Animated background pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIgZmlsbD0id2hpdGUiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')]"></div>
-            </div>
-
-            <div className="relative z-10">
-              <h2 className="text-5xl font-bold mb-4">Ready to say goodbye to cloning nightmares?</h2>
-              <p className="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
-                Join hundreds of researchers who've reclaimed their weekends
-              </p>
-              <div className="flex gap-4 justify-center">
-                <Link to="/order">
-                  <Button size="lg" variant="secondary" className="text-md px-8">
-                    Start Your Order
-                  </Button>
-                </Link>
-                <Button size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/30 text-md px-8">
-                  View Pricing
-                </Button>
+          {/* Workflow */}
+          <section style={{ background: "#fff", padding: "5rem 3rem", borderTop: "1px solid #d4dae8", borderBottom: "1px solid #d4dae8" }}>
+            <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+              <p style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "#5b7fb5", marginBottom: "0.75rem", textAlign: "center" }}>How It Works</p>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 300, fontSize: "2.6rem", letterSpacing: "-0.03em", color: "#1d3461", marginBottom: "3.5rem", textAlign: "center" }}>Your new cloning workflow.</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem", position: "relative" }}>
+                <div style={{ position: "absolute", top: "calc(1.5rem + 28px)", left: "calc(12.5% + 28px)", right: "calc(12.5% + 28px)", height: 1, background: "linear-gradient(90deg, #d4dae8, #8fa8d0, #d4dae8)", zIndex: 0 }} />
+                {STEPS.map(s => (
+                    <div key={s.n} style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "1.5rem 1rem" }}>
+                      <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#1d3461", color: "#fff", fontFamily: "'Fraunces', serif", fontSize: "1.4rem", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.25rem", boxShadow: "0 4px 16px rgba(29,52,97,0.25)" }}>{s.n}</div>
+                      <h4 style={{ fontSize: "0.95rem", fontWeight: 600, color: "#1a2236", marginBottom: "0.5rem" }}>{s.title}</h4>
+                      <p style={{ fontSize: "0.82rem", color: "#4a5a78", lineHeight: 1.6 }}>{s.body}</p>
+                    </div>
+                ))}
               </div>
             </div>
-          </motion.section>
-        </main>
-        <Footer />
-      </div>
-  );
-};
+          </section>
 
-export default LandingPage;
+          {/* Value Props */}
+          <section style={{ background: "#f4f6fa", padding: "5rem 3rem", borderTop: "1px solid #d4dae8", borderBottom: "1px solid #d4dae8" }}>
+            <div style={{ maxWidth: 1200, margin: "0 auto", textAlign: "center" }}>
+              <p style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "#5b7fb5", marginBottom: "0.75rem" }}>Why VectorWeave?</p>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 300, fontSize: "2.6rem", letterSpacing: "-0.03em", color: "#1d3461", marginBottom: "3.5rem" }}>Science, not cloning.</h2>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "2rem" }}>
+                {[
+                  {
+                    title: "Save Time",
+                    body: "Spend your time on experiments that matter, not cloning. Just send us your design and DNA.",
+                    icon: <svg viewBox="0 0 44 44" fill="none" style={{ width: 44, height: 44, display: "block", margin: "0 auto 1.25rem" }}>
+                      <circle cx="22" cy="22" r="20" stroke="#d4dae8" strokeWidth="1.5"/>
+                      <circle cx="22" cy="22" r="15" fill="none" stroke="#1d3461" strokeWidth="2"/>
+                      <line x1="22" y1="22" x2="22" y2="10" stroke="#1d3461" strokeWidth="2" strokeLinecap="round"/>
+                      <line x1="22" y1="22" x2="30" y2="26" stroke="#5b7fb5" strokeWidth="2" strokeLinecap="round"/>
+                      <circle cx="22" cy="22" r="2" fill="#d94f2b"/>
+                    </svg>,
+                  },
+                  {
+                    title: "Save Money",
+                    body: "Stop burning money on costly reagents and do-overs. One order, one price: no kits, no repeats, no surprises.",
+                    icon: <svg viewBox="0 0 44 44" fill="none" style={{ width: 44, height: 44, display: "block", margin: "0 auto 1.25rem" }}>
+                      <circle cx="22" cy="22" r="20" stroke="#d4dae8" strokeWidth="1.5"/>
+                      <text x="22" y="30" textAnchor="middle" fontFamily="DM Sans" fontWeight="700" fontSize="22" fill="#1d3461">$</text>
+                    </svg>,
+                  },
+                  {
+                    title: "Do Better Science",
+                    body: "Build the complex plasmids you've only dreamed about. If you can design it, we can make it real.",
+                    icon: <svg viewBox="0 0 44 44" fill="none" style={{ width: 44, height: 44, display: "block", margin: "0 auto 1.25rem" }}>
+                      <circle cx="22" cy="8" r="5" fill="none" stroke="#5b7fb5" strokeWidth="2"/>
+                      <circle cx="8" cy="30" r="5" fill="none" stroke="#d94f2b" strokeWidth="2"/>
+                      <circle cx="36" cy="30" r="5" fill="none" stroke="#1a7a4a" strokeWidth="2"/>
+                      <line x1="22" y1="13" x2="22" y2="38" stroke="#1d3461" strokeWidth="1.5" strokeDasharray="2,2"/>
+                      <line x1="13" y1="30" x2="31" y2="30" stroke="#1d3461" strokeWidth="1.5"/>
+                    </svg>,
+                  },
+                ].map(v => (
+                    <div key={v.title} className="value-card" style={{ background: "#fff", border: "1px solid #d4dae8", borderRadius: 14, padding: "2rem", textAlign: "center", transition: "all 0.2s" }}>
+                      {v.icon}
+                      <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#1a2236", marginBottom: "0.5rem" }}>{v.title}</h3>
+                      <p style={{ fontSize: "0.875rem", color: "#4a5a78", lineHeight: 1.65 }}>{v.body}</p>
+                    </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          {/* Comparison */}
+          <section style={{ background: "#fff", padding: "5rem 3rem", borderTop: "1px solid #d4dae8", borderBottom: "1px solid #d4dae8" }}>
+            <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+              <p style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.14em", color: "#5b7fb5", marginBottom: "0.75rem", textAlign: "center" }}>How We Compare</p>
+              <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 300, fontSize: "2.6rem", letterSpacing: "-0.03em", color: "#1d3461", marginBottom: "3.5rem", textAlign: "center" }}>The better choice is clear.</h2>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+                <thead>
+                <tr>
+                  <th style={{ padding: "1rem 1.5rem 1rem 0", textAlign: "left", fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7a8ca8", borderBottom: "2px solid #d4dae8" }}>Feature</th>
+                  <th style={{ padding: "1rem 1.5rem", textAlign: "left", fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#1d3461", borderBottom: "2px solid #d4dae8", background: "rgba(29,52,97,0.04)", borderRadius: "8px 8px 0 0" }}>VectorWeave</th>
+                  <th style={{ padding: "1rem 1rem 1rem 1.5rem", textAlign: "left", fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7a8ca8", borderBottom: "2px solid #d4dae8" }}>DNA Synthesis Vendors</th>
+                  <th style={{ padding: "1rem 0 1rem 1rem", textAlign: "left", fontSize: "0.78rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#7a8ca8", borderBottom: "2px solid #d4dae8" }}>DIY Cloning</th>
+                </tr>
+                </thead>
+                <tbody>
+                {COMPARE_ROWS.map(r => (
+                    <tr key={r.feat}>
+                      <td style={{ padding: "1rem 1.5rem 1rem 0", borderBottom: "1px solid #d4dae8", color: "#1a2236", fontWeight: 500, fontSize: "0.82rem", textTransform: "uppercase", letterSpacing: "0.05em", verticalAlign: "top" }}>{r.feat}</td>
+                      <td style={{ padding: "1rem 1.5rem", borderBottom: "1px solid #d4dae8", color: "#1a2236", fontWeight: 500, background: "rgba(29,52,97,0.03)", verticalAlign: "top" }}>{r.us}</td>
+                      <td style={{ padding: "1rem 1rem 1rem 1.5rem", borderBottom: "1px solid #d4dae8", color: "#4a5a78", verticalAlign: "top" }}>{r.vendors}</td>
+                      <td style={{ padding: "1rem 0 1rem 1rem", borderBottom: "1px solid #d4dae8", color: "#4a5a78", verticalAlign: "top" }}>{r.diy}</td>
+                    </tr>
+                ))}
+                </tbody>
+              </table>
+              <div style={{ marginTop: "2rem", background: "linear-gradient(135deg, rgba(91,127,181,0.1), rgba(29,52,97,0.06))", border: "1px solid #8fa8d0", borderRadius: 12, padding: "1.25rem 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "2rem" }}>
+                <p style={{ fontSize: "0.9rem", color: "#4a5a78" }}>
+                  💾 <strong style={{ color: "#1d3461" }}>Want even less hassle?</strong> Let us store your vector for future use. Only $50 for 1 year of storage — no re-submission needed on your next order.
+                </p>
+                <a href="#" style={{ flexShrink: 0, display: "inline-flex", background: "none", border: "1.5px solid #1d3461", color: "#1d3461", padding: "0.45rem 1rem", borderRadius: 7, fontSize: "0.82rem", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap", transition: "all 0.15s" }}
+                   onMouseEnter={e => { e.currentTarget.style.background = "#1d3461"; e.currentTarget.style.color = "#fff"; }}
+                   onMouseLeave={e => { e.currentTarget.style.background = ""; e.currentTarget.style.color = "#1d3461"; }}
+                >Learn More</a>
+              </div>
+            </div>
+          </section>
+
+          {/* Footer CTA */}
+          <div style={{ padding: "6rem 3rem", textAlign: "center", maxWidth: 700, margin: "0 auto" }}>
+            <h2 style={{ fontFamily: "'Fraunces', serif", fontWeight: 600, fontSize: "2.8rem", letterSpacing: "-0.03em", color: "#1d3461", marginBottom: "1rem", lineHeight: 1.1 }}>
+              Ready to clone<br /><em>anything?</em>
+            </h2>
+            <p style={{ color: "#4a5a78", fontSize: "1rem", lineHeight: 1.7, marginBottom: "2.5rem" }}>
+              Join hundreds of researchers who've stopped wasting weekends in the lab. Send us your design and let VectorWeave handle the rest.
+            </p>
+            <a href="#" style={{ background: "#d94f2b", color: "#fff", border: "none", padding: "0.85rem 2.2rem", borderRadius: 8, fontSize: "1rem", fontWeight: 600, textDecoration: "none", display: "inline-block", transition: "all 0.18s" }}
+               onMouseEnter={e => { e.currentTarget.style.background = "#b84020"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(217,79,43,0.3)"; }}
+               onMouseLeave={e => { e.currentTarget.style.background = "#d94f2b"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
+            >Start Cloning Today</a>
+          </div>
+        </div>
+
+        <Footer />
+      </>
+  );
+}
