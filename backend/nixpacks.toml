@@ -1,0 +1,10 @@
+[phases.setup]
+nixPkgs = ['...', 'jdk17']
+
+[phases.build]
+cmds = [
+    './gradlew build --no-daemon -x test'
+]
+
+[start]
+cmd = './gradlew bootRun --no-daemon'
