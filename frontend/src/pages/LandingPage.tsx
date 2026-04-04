@@ -4,44 +4,10 @@ import Footer from "../components/Footer";
 import { useState } from "react";
 
 /* ── Types ─────────────────────────────────────────── */
-interface ServiceItem { title: string; tagline: string; body: string; features: string[]; wide?: boolean; }
 interface StepItem { n: string; title: string; body: string; }
 interface CompareRow { feat: string; us: string; vendors: string; diy: string; }
 
 /* ── Data ───────────────────────────────────────────── */
-const SERVICES: ServiceItem[] = [
-  {
-    title: "Multi-Insert Cloning",
-    tagline: '"Maybe it\'ll work this time" isn\'t a workflow.',
-    body: "Seamlessly assemble complex plasmids with up to 5 inserts in a single step. Each plasmid is sequence-verified and ready to use, saving you from wasted weekends and repeat reactions.",
-    features: ["Up to 5 fragments in one seamless build", "No restriction sites, no scars", "Sequence-verified results in days"],
-  },
-  {
-    title: "Custom Backbone Construction",
-    tagline: "Why settle for someone else's plasmid backbone?",
-    body: "Design and build entirely new plasmid backbones from scratch. Combine any elements — markers, origins, promoters, reporters — to create the custom vector you've always wanted.",
-    features: ["Freedom from pre-built constructs", "Mix & match any combination of parts", "Concept to construct in days, not months"],
-  },
-  {
-    title: "Multi-Site & Codon Mutagenesis",
-    tagline: "Why make one change when you can make five?",
-    body: "Make targeted site-directed or codon-level mutations at up to five sites in a single build. Create parallel designs or randomized libraries without iterative PCRs or screening cycles.",
-    features: ["Up to 5 mutations per build", "Point mutations or codon-level changes", "Parallel variant libraries in one step"],
-  },
-  {
-    title: "Domain Mutagenesis",
-    tagline: "Why mutagenize just one domain when you can do three?",
-    body: "Create variant libraries by mutating separate DNA domains simultaneously. Swap, randomize, and reengineer regions in parallel. Focus on what your variants teach you, not how to make them.",
-    features: ["Up to 3 simultaneous domain mutations", "Seamless integration of parts", "Outsource the grind, keep the science"],
-  },
-  {
-    title: "Synthetic DNA Cloning",
-    tagline: "We handle the vendors. You handle the science.",
-    body: "Clone synthetic DNA fragments into any plasmid backbone, without onboarding fees. We coordinate with synthesis providers, clone into any vector — even low copy plasmids — and send you verified constructs.",
-    features: ["Clone into your vector, not a vendor's", "No onboarding fees or setup minimums", "We handle all vendor communication"],
-    wide: true,
-  },
-];
 
 const STEPS: StepItem[] = [
   { n: "1", title: "Place your Order", body: "Upload your plasmid design online. Pay with credit card or PO and receive your submission instructions." },
