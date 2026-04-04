@@ -1,47 +1,13 @@
 import BG_B64 from "../assets/hero.png";
+import ARTSY_WEAVE from "../assets/artsy_weave.jpeg";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useState } from "react";
 
 /* ── Types ─────────────────────────────────────────── */
-interface ServiceItem { title: string; tagline: string; body: string; features: string[]; wide?: boolean; }
 interface StepItem { n: string; title: string; body: string; }
 interface CompareRow { feat: string; us: string; vendors: string; diy: string; }
 
 /* ── Data ───────────────────────────────────────────── */
-const SERVICES: ServiceItem[] = [
-  {
-    title: "Multi-Insert Cloning",
-    tagline: '"Maybe it\'ll work this time" isn\'t a workflow.',
-    body: "Seamlessly assemble complex plasmids with up to 5 inserts in a single step. Each plasmid is sequence-verified and ready to use, saving you from wasted weekends and repeat reactions.",
-    features: ["Up to 5 fragments in one seamless build", "No restriction sites, no scars", "Sequence-verified results in days"],
-  },
-  {
-    title: "Custom Backbone Construction",
-    tagline: "Why settle for someone else's plasmid backbone?",
-    body: "Design and build entirely new plasmid backbones from scratch. Combine any elements — markers, origins, promoters, reporters — to create the custom vector you've always wanted.",
-    features: ["Freedom from pre-built constructs", "Mix & match any combination of parts", "Concept to construct in days, not months"],
-  },
-  {
-    title: "Multi-Site & Codon Mutagenesis",
-    tagline: "Why make one change when you can make five?",
-    body: "Make targeted site-directed or codon-level mutations at up to five sites in a single build. Create parallel designs or randomized libraries without iterative PCRs or screening cycles.",
-    features: ["Up to 5 mutations per build", "Point mutations or codon-level changes", "Parallel variant libraries in one step"],
-  },
-  {
-    title: "Domain Mutagenesis",
-    tagline: "Why mutagenize just one domain when you can do three?",
-    body: "Create variant libraries by mutating separate DNA domains simultaneously. Swap, randomize, and reengineer regions in parallel. Focus on what your variants teach you, not how to make them.",
-    features: ["Up to 3 simultaneous domain mutations", "Seamless integration of parts", "Outsource the grind, keep the science"],
-  },
-  {
-    title: "Synthetic DNA Cloning",
-    tagline: "We handle the vendors. You handle the science.",
-    body: "Clone synthetic DNA fragments into any plasmid backbone, without onboarding fees. We coordinate with synthesis providers, clone into any vector — even low copy plasmids — and send you verified constructs.",
-    features: ["Clone into your vector, not a vendor's", "No onboarding fees or setup minimums", "We handle all vendor communication"],
-    wide: true,
-  },
-];
 
 const STEPS: StepItem[] = [
   { n: "1", title: "Place your Order", body: "Upload your plasmid design online. Pay with credit card or PO and receive your submission instructions." },
@@ -58,44 +24,106 @@ const COMPARE_ROWS: CompareRow[] = [
   { feat: "Total Cost", us: "Predictable and affordable. No hidden fees.", vendors: "High costs for long or complex builds.", diy: "High reagent, labor, and re-do costs." },
 ];
 
-/* ── Plasmid SVG ────────────────────────────────────── */
-function PlasmidSVG() {
-  const [deg, setDeg] = useState(0);
-  const [spinning, setSpinning] = useState(false);
-
-  function handleHover() {
-    if (spinning) return;
-    setSpinning(true);
-    setDeg(d => d + 360);
-    setTimeout(() => setSpinning(false), 900);
-  }
-
+/* ── Service Icons ──────────────────────────────────── */
+function IconSyntheticInserts() {
   return (
-      <svg
-          viewBox="-150 -150 300 300"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ display: "block", width: 280, height: 280, cursor: "pointer" }}
-          onMouseEnter={handleHover}
-      >
-        <g style={{ transform: `rotate(${deg}deg)`, transformOrigin: "0px 0px", transition: spinning ? "transform 0.9s cubic-bezier(0.4,0,0.2,1)" : "none" }}>
-          <circle cx="0" cy="0" r="110" fill="none" stroke="#e8ecf4" strokeWidth="18" />
-          <path fill="none" stroke="#5b7fb5" strokeWidth="18" strokeLinecap="round" d="M 0 -110 A 110 110 0 0 1 95.26 -55" />
-          <path fill="none" stroke="#1a7a4a" strokeWidth="18" strokeLinecap="round" d="M 95.26 -55 A 110 110 0 0 1 95.26 55" />
-          <path fill="none" stroke="#d94f2b" strokeWidth="18" strokeLinecap="round" d="M 95.26 55 A 110 110 0 0 1 0 110" />
-          <path fill="none" stroke="#7c5cbf" strokeWidth="18" strokeLinecap="round" d="M 0 110 A 110 110 0 0 1 -95.26 55" />
-          <path fill="none" stroke="#2a8a9a" strokeWidth="18" strokeLinecap="round" d="M -95.26 55 A 110 110 0 0 1 -95.26 -55" />
-          <path fill="none" stroke="#c0392b" strokeWidth="18" strokeLinecap="round" d="M -95.26 -55 A 110 110 0 0 1 0 -110" />
-          <circle cx="0" cy="0" r="85" fill="none" stroke="#eef1f7" strokeWidth="8" />
-          <path fill="none" stroke="#b8c3d8" strokeWidth="2.5" strokeDasharray="4,6" d="M 0,-85 A 85,85 0 1,1 -0.1,-85" />
-          <text x="0" y="-60" textAnchor="middle" fontFamily="DM Mono, monospace" fontSize="8" fill="#4a5a78" fontWeight="500">pUC19</text>
-          <text x="0" y="-48" textAnchor="middle" fontFamily="DM Mono, monospace" fontSize="6.5" fill="#7a8ca8">2686 bp</text>
-          <g stroke="#5b7fb5" strokeWidth="1.5">
-            {[0, 72, 144, 216, 288].map(d => (
-                <line key={d} x1="85" y1="0" x2="100" y2="0" transform={`rotate(${d})`} />
-            ))}
-          </g>
-          <circle cx="0" cy="0" r="126" fill="none" stroke="#1d3461" strokeWidth="1" strokeDasharray="2,3" opacity="0.4" />
-        </g>
+      <svg viewBox="0 0 80 80" fill="none"
+           style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
+
+        {/* base circle */}
+        <circle cx="40" cy="40" r="32"
+                stroke="#d4dae8" strokeWidth="6.5" fill="none" />
+
+        {/* aligned arc */}
+        <circle
+            cx="40"
+            cy="40"
+            r="32"
+            stroke="#d94f2b"
+            strokeWidth="6.5"
+            fill="none"
+            strokeDasharray="100 200"
+            strokeDashoffset="140"
+            strokeLinecap="butt"
+        />
+      </svg>
+  );
+}
+
+function IconMultiInsert() {
+  return (
+      <svg viewBox="0 0 80 80" fill="none"
+           style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
+
+        {/* base circle */}
+        <circle cx="40" cy="40" r="32"
+                stroke="#d4dae8" strokeWidth="6.5" fill="none" />
+
+        {/* segments */}
+        <circle
+            cx="40" cy="40" r="32"
+            stroke="#b8cfe8" strokeWidth="6.5"
+            fill="none"
+            strokeDasharray="70 230"
+            strokeDashoffset="120"
+        />
+
+        <circle
+            cx="40" cy="40" r="32"
+            stroke="#5b7fb5" strokeWidth="6.5"
+            fill="none"
+            strokeDasharray="50 250"
+            strokeDashoffset="190"
+        />
+
+        <circle
+            cx="40" cy="40" r="32"
+            stroke="#d94f2b" strokeWidth="6.5"
+            fill="none"
+            strokeDasharray="50 250"
+            strokeDashoffset="20"
+        />
+      </svg>
+  );
+}
+
+function IconPlasmiBackbones() {
+  return (
+      <svg viewBox="0 0 80 80" fill="none" style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
+        <path d="M 40 8 A 32 32 0 0 1 72 40" fill="none" stroke="#1d3461" strokeWidth="6.5" strokeLinecap="butt"/>
+        <path d="M 72 40 A 32 32 0 0 1 40 72" fill="none" stroke="#5b7fb5" strokeWidth="6.5" strokeLinecap="butt"/>
+        <path d="M 40 72 A 32 32 0 0 1 8 40" fill="none" stroke="#d94f2b" strokeWidth="6.5" strokeLinecap="butt"/>
+        <path d="M 8 40 A 32 32 0 0 1 40 8" fill="none" stroke="#f1c40f" strokeWidth="6.5" strokeLinecap="butt"/>
+      </svg>
+  );
+}
+
+function IconMutagenesis() {
+  return (
+      <svg viewBox="0 0 80 80" fill="none"
+           style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
+
+        {/* base circle */}
+        <circle cx="40" cy="40" r="32"
+                stroke="#d4dae8" strokeWidth="6.5" fill="none" />
+
+        {/* top star (aligned to circle edge at y = 8) */}
+        <polygon
+            points="40,8 42.5,14 49,14 43.5,18 46,24 40,20 34,24 36.5,18 31,14 37.5,14"
+            fill="#d94f2b"
+        />
+
+        {/* right star (aligned to x = 72) */}
+        <polygon
+            points="72,40 74.5,46 81,46 75.5,50 78,56 72,52 66,56 68.5,50 63,46 69.5,46"
+            fill="#5b7fb5"
+        />
+
+        {/* bottom-left star (aligned along circle) */}
+        <polygon
+            points="16,64 18.5,70 25,70 19.5,74 22,80 16,76 10,80 12.5,74 7,70 13.5,70"
+            fill="#b8cfe8"
+        />
       </svg>
   );
 }
@@ -176,7 +204,11 @@ export default function LandingPage() {
             </div>
             <div className="anim-5" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div style={{ background: "rgba(255,255,255,0.75)", backdropFilter: "blur(8px)", borderRadius: 20, padding: "2.5rem", border: "1px solid rgba(212,218,232,0.7)", boxShadow: "0 12px 48px rgba(29,52,97,0.1)" }}>
-                <PlasmidSVG />
+                <img
+                    src={ARTSY_WEAVE}
+                    alt="VectorWeave"
+                    style={{ display: "block", width: 280, height: 280, objectFit: "cover", borderRadius: 10 }}
+                />
               </div>
             </div>
           </div>
@@ -198,40 +230,10 @@ export default function LandingPage() {
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1.5rem" }}>
               {[
-                {
-                  title: "Synthetic Inserts",
-                  icon: <svg viewBox="0 0 80 80" fill="none" style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="#d4dae8" strokeWidth="6"/>
-                    <path d="M 33 10.5 A 32 32 0 0 1 47 10.5" fill="none" stroke="#d94f2b" strokeWidth="6"/>
-                  </svg>,
-                },
-                {
-                  title: "Multi-Insert Cloning",
-                  icon: <svg viewBox="0 0 80 80" fill="none" style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="#d4dae8" strokeWidth="6"/>
-                    <path d="M 30 12 A 32 32 0 0 1 38.5 8.2" fill="none" stroke="#d94f2b" strokeWidth="6"/>
-                    <path d="M 38.5 8.2 A 32 32 0 0 1 50 12" fill="none" stroke="#5b7fb5" strokeWidth="6"/>
-                    <path d="M 50 12 A 32 32 0 0 1 58 21" fill="none" stroke="#1a7a4a" strokeWidth="6"/>
-                  </svg>,
-                },
-                {
-                  title: "Build New Plasmid Backbones",
-                  icon: <svg viewBox="0 0 80 80" fill="none" style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
-                    <path d="M 40 8 A 32 32 0 0 1 72 40" fill="none" stroke="#1d3461" strokeWidth="6"/>
-                    <path d="M 72 40 A 32 32 0 0 1 40 72" fill="none" stroke="#5b7fb5" strokeWidth="6"/>
-                    <path d="M 40 72 A 32 32 0 0 1 8 40" fill="none" stroke="#d94f2b" strokeWidth="6"/>
-                    <path d="M 8 40 A 32 32 0 0 1 40 8" fill="none" stroke="#f1c40f" strokeWidth="6"/>
-                  </svg>,
-                },
-                {
-                  title: "Multi-Site Mutagenesis",
-                  icon: <svg viewBox="0 0 80 80" fill="none" style={{ width: 80, height: 80, display: "block", margin: "0 auto 1rem" }}>
-                    <circle cx="40" cy="40" r="32" fill="none" stroke="#d4dae8" strokeWidth="6"/>
-                    <path d="M 40 8 l 2 6 l 6 0 l -5 4 l 2 6 l -5 -4 l -5 4 l 2 -6 l -5 -4 l 6 0 Z" fill="#d94f2b"/>
-                    <path d="M 72 40 l 2 6 l 6 0 l -5 4 l 2 6 l -5 -4 l -5 4 l 2 -6 l -5 -4 l 6 0 Z" fill="#5b7fb5"/>
-                    <path d="M 16 60 l 2 6 l 6 0 l -5 4 l 2 6 l -5 -4 l -5 4 l 2 -6 l -5 -4 l 6 0 Z" fill="#1a7a4a"/>
-                  </svg>,
-                },
+                { title: "Synthetic Inserts",           icon: <IconSyntheticInserts /> },
+                { title: "Multi-Insert Cloning",        icon: <IconMultiInsert /> },
+                { title: "Build New Plasmid Backbones", icon: <IconPlasmiBackbones /> },
+                { title: "Multi-Site Mutagenesis",      icon: <IconMutagenesis /> },
               ].map(item => (
                   <div key={item.title} className="value-card" style={{ background: "#fff", border: "1px solid #d4dae8", borderRadius: 14, padding: "2rem 1.5rem", textAlign: "center", transition: "all 0.2s" }}>
                     {item.icon}
