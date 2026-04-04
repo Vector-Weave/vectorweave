@@ -75,11 +75,11 @@ export default function Header() {
           {NAV.map(item => <NavDropdown key={item.label} item={item} />)}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <a href="#" style={{ background: "none", border: "1.5px solid #d4dae8", color: "#4a5a78", padding: "0.4rem 1.1rem", borderRadius: 7, fontSize: "0.83rem", fontWeight: 500, textDecoration: "none", transition: "all 0.15s" }}
+          <a href="/auth" style={{ background: "none", border: "1.5px solid #d4dae8", color: "#4a5a78", padding: "0.4rem 1.1rem", borderRadius: 7, fontSize: "0.83rem", fontWeight: 500, textDecoration: "none", transition: "all 0.15s" }}
              onMouseEnter={e => { e.currentTarget.style.borderColor = "#1d3461"; e.currentTarget.style.color = "#1d3461"; }}
              onMouseLeave={e => { e.currentTarget.style.borderColor = "#d4dae8"; e.currentTarget.style.color = "#4a5a78"; }}
           >Sign In</a>
-          <a href="#" style={{ background: "#1d3461", border: "none", color: "#fff", padding: "0.45rem 1.25rem", borderRadius: 7, fontSize: "0.83rem", fontWeight: 600, textDecoration: "none", transition: "all 0.15s" }}
+          <a href="/order" style={{ background: "#1d3461", border: "none", color: "#fff", padding: "0.45rem 1.25rem", borderRadius: 7, fontSize: "0.83rem", fontWeight: 600, textDecoration: "none", transition: "all 0.15s" }}
              onMouseEnter={e => (e.currentTarget.style.background = "#3a5a99")}
              onMouseLeave={e => (e.currentTarget.style.background = "#1d3461")}
           >Order Now</a>
