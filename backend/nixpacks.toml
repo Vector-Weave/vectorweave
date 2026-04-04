@@ -1,0 +1,10 @@
+[phases.setup]
+nixPkgs = ['...', 'jdk17']
+
+[phases.build]
+cmds = [
+    './gradlew bootJar --no-daemon -x test'
+]
+
+[start]
+cmd = 'java -Xmx512m -Xms256m -jar build/libs/*.jar'

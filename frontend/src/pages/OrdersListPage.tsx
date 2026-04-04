@@ -8,20 +8,19 @@ import { orderService } from "../services/orderService";
 import { Plus } from "lucide-react";
 
 // Type matching backend OrderResponse
-interface Order {
-  orderId: number;
+type Order = {
+  orderId: number | null;
   plasmidName: string;
-  datePlaced: string;
+  datePlaced: string | null;
   totalPrice: number;
-  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETE";
+  status: string;
   message: string;
-}
+};
 
 export default function OrdersListPage() {
   const [, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,7 +41,6 @@ export default function OrdersListPage() {
       setOrders(orderData);
     } catch (error: any) {
       console.error("Error fetching orders:", error);
-      setError(error.response?.data || "Failed to load orders");
       // Don't redirect on error - user is authenticated, just show error
     } finally {
       setLoading(false);
@@ -67,19 +65,6 @@ export default function OrdersListPage() {
         return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const formatStatus = (status: string) => {
-    switch (status) {
-      case "COMPLETE":
-        return "Completed";
-      case "NOT_STARTED":
-        return "Pending";
-      case "IN_PROGRESS":
-        return "Processing";
-      default:
-        return status;
     }
   };
 
@@ -125,7 +110,7 @@ export default function OrdersListPage() {
                       <tr className="border-b border-gray-200">
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Order ID</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Date</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Items</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Plasmid</th>
                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">Status</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Total</th>
                         <th className="text-right py-3 px-4 text-sm font-medium text-gray-700">Actions</th>
@@ -133,16 +118,16 @@ export default function OrdersListPage() {
                     </thead>
                     <tbody>
                       {orders.map((order) => (
-                        <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-4 px-4 text-sm text-gray-900 font-medium">#{order.id}</td>
-                          <td className="py-4 px-4 text-sm text-gray-600">{order.date}</td>
-                          <td className="py-4 px-4 text-sm text-gray-600">{order.items}</td>
+                        <tr key={order.orderId} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-4 px-4 text-sm text-gray-900 font-medium">#{order.orderId}</td>
+                          <td className="py-4 px-4 text-sm text-gray-600">{order.datePlaced ? new Date(order.datePlaced).toLocaleDateString() : 'N/A'}</td>
+                          <td className="py-4 px-4 text-sm text-gray-600">{order.plasmidName}</td>
                           <td className="py-4 px-4">
                             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
                               {order.status}
                             </span>
                           </td>
-                          <td className="py-4 px-4 text-sm text-gray-900 font-medium text-right">{order.total}</td>
+                          <td className="py-4 px-4 text-sm text-gray-900 font-medium text-right">${order.totalPrice.toFixed(2)}</td>
                           <td className="py-4 px-4 text-right">
                             <Button
                               variant="outline"
