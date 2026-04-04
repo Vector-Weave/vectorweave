@@ -134,7 +134,7 @@ export default function LandingPage() {
                    onMouseEnter={e => { e.currentTarget.style.background = "#b84020"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(217,79,43,0.3)"; }}
                    onMouseLeave={e => { e.currentTarget.style.background = "#d94f2b"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
                 >Start Cloning</a>
-                <a href="#" style={{ color: "#1d3461", fontSize: "0.9rem", fontWeight: 500, textDecoration: "none", borderBottom: "1px solid transparent", transition: "border-color 0.15s" }}
+                <a href="/order" style={{ color: "#1d3461", fontSize: "0.9rem", fontWeight: 500, textDecoration: "none", borderBottom: "1px solid transparent", transition: "border-color 0.15s" }}
                    onMouseEnter={e => (e.currentTarget.style.borderBottomColor = "#1d3461")}
                    onMouseLeave={e => (e.currentTarget.style.borderBottomColor = "transparent")}
                 >See our services →</a>
@@ -318,7 +318,7 @@ export default function LandingPage() {
             <p style={{ color: "#4a5a78", fontSize: "1rem", lineHeight: 1.7, marginBottom: "2.5rem" }}>
               Join hundreds of researchers who've stopped wasting weekends in the lab. Send us your design and let VectorWeave handle the rest.
             </p>
-            <a href="#" style={{ background: "#d94f2b", color: "#fff", border: "none", padding: "0.85rem 2.2rem", borderRadius: 8, fontSize: "1rem", fontWeight: 600, textDecoration: "none", display: "inline-block", transition: "all 0.18s" }}
+            <a href="/order" style={{ background: "#d94f2b", color: "#fff", border: "none", padding: "0.85rem 2.2rem", borderRadius: 8, fontSize: "1rem", fontWeight: 600, textDecoration: "none", display: "inline-block", transition: "all 0.18s" }}
                onMouseEnter={e => { e.currentTarget.style.background = "#b84020"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(217,79,43,0.3)"; }}
                onMouseLeave={e => { e.currentTarget.style.background = "#d94f2b"; e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
             >Start Cloning Today</a>
